@@ -22,62 +22,28 @@
 #include <map>
 #include <string>
 #include <assert.h>
-#include <iomanip> 
+#include <iomanip>
+
+#include "ktxtool.h"
 
 
 
 
 
 
-using std::string;
 
 
 
-enum OptionFlags
-{
-	OPTION_DEFINED = 0x01,
-	OPTION_EXPECTS_VALUE = 0x02,
-	OPTION_REQUIRED = 0x08
-};
-
-
-struct Option
-{
-	char   id;
-	int    flags;
-	string value;
-	string desc;
-
-	Option()
-	{
-		id = char(0);
-		flags = 0;
-	}
-
-	inline bool IsDefined() const
-	{
-		return (flags & OPTION_DEFINED) != 0;
-	}
-
-	inline bool ExpectsValue() const
-	{
-		return (flags & OPTION_EXPECTS_VALUE) != 0;
-	}
-
-	inline bool IsRequired() const
-	{
-		return (flags & OPTION_REQUIRED) != 0;
-	}
-
-	inline void MarkAsDefined()
-	{
-		flags |= OPTION_DEFINED; 
-	}
-};
 
 typedef std::map<char, Option> OptionMap;
 
-OptionMap  options;
+static OptionMap  options;
+
+
+
+
+
+
 
 Option* GetOption(char id)
 {
@@ -106,8 +72,6 @@ Option& AddOption(char id, int flags, const char* desc)
 
 	return opt;
 }
-
-
 
 static void DumpOptions()
 {
@@ -150,8 +114,6 @@ static void DumpOptions()
 	}
 
 }
-
-
 
 int main (int argc, char* argv[])
 {
@@ -253,18 +215,55 @@ int main (int argc, char* argv[])
 		return 4;
 	}
 
-	//now parse some utility arguments (the last 2) as FILEIN FILEOUT
-	if ((argc - parsedArg) > 0)
+	//now parse the "auto" options -f and -o, error if already defined direclty
+	Option* opt1 = GetOption('f');
+	Option* opt2 = GetOption('o');
+	
+	assert(opt1 != NULL && opt2 != NULL);
+
+
+	if (argc - parsedArg > 0)
 	{
-		//cout << "  1 " <<  argv[parsedArg] << endl;
+		if (opt1->IsDefined())
+		{
+			cerr << "Unexpected input file, -f already defined" << endl;
+			return 5;
+		}
+
+		opt1->MarkAsDefined();
+		opt1->value = argv[parsedArg];
 	}
 
-	//cout << (argc - parsedArg) << endl;
+	if (argc - parsedArg > 1)
+	{
+		if (opt2->IsDefined())
+		{
+			cerr << "Unexpected output file, -O already defined" << endl;
+			return 6;
+		}
 
+		opt2->MarkAsDefined();
+		opt2->value = argv[parsedArg + 1];
+	}
 
-	
+	//pre-validate options
+	OptionMap::iterator it = options.begin();
 
-	
+	while (it != options.end())
+	{
+		Option& opt = it->second;
+
+		if (opt.IsRequired() && !opt.IsDefined())
+		{
+			cerr << "option -" << opt.id << " is required (" << opt.desc << ")" << endl;
+
+			return opt.id;
+		}
+
+		it++;
+	}
+
+	//cout << "PROCESSING" << endl;
 
 
 	return 0;

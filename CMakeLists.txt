@@ -24,7 +24,7 @@ project(ktxtool)
 
 
 #dependencies
-find_package(libPNG REQUIRED)
+find_package(PNG REQUIRED)
 
 
 set(SOURCES 
@@ -33,9 +33,12 @@ set(SOURCES
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -D_DEBUG")
 
-include_directories(source/)
+include_directories(source/ ${PNG_INCLUDE_DIRS})
 
-#make
+
+target_link_libraries(${PNG_LIBRARY})
+
+
 add_executable(ktxtool ${SOURCES})
 
 
