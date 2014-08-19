@@ -1,5 +1,5 @@
 /*
- * ktxtool, A convertion/compression tool for the KTX image format
+ * ktxtool, A conversion and compression tool for the KTX image format
  *
  * Copyright (C) 2014 Luis Jimenez, www.kvbits.com
  *
@@ -75,14 +75,21 @@ struct Option
 
 
 
-/* Gets a proccesed option from it's CHAR id, ie. -f 
- * Returns NULL if not found (should be asserted) */
+
+/** Gets a proccesed option from it's CHAR id, ie. -f 
+ *  Returns NULL if not found (should be asserted) */
 Option* GetOption(char id);
 
 
-/* Adds an option to be processed, this should be called ealry 
- * in the main function */
+/** Adds an option to be processed, this should be called ealry 
+ *  in the main function */
 Option& AddOption(char id, int flags, const char* desc);
+
+
+
+/** Adds an input format to convert from into pixel data */
+void AddInputFormat(InputFormat* pFormat);
+
 
 
 

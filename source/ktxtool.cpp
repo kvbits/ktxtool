@@ -1,5 +1,5 @@
 /*
- * ktxtool, A convertion/compression tool for the KTX image format
+ * ktxtool, A conversion and compression tool for the KTX image format
  *
  * Copyright (C) 2014 Luis Jimenez, www.kvbits.com
  *
@@ -20,10 +20,11 @@
 
 #include <iostream>
 #include <map>
+#include <list>
 #include <string>
 #include <assert.h>
 #include <iomanip>
-
+#include "InputFormat.h"
 #include "ktxtool.h"
 
 
@@ -31,17 +32,18 @@
 
 
 
+using namespace std;
 
 
 
 
 
 typedef std::map<char, Option> OptionMap;
-
-static OptionMap  options;
-
+typedef std::list<InputFormat*> FormatList;
 
 
+OptionMap  options;
+FormatList formats;
 
 
 
@@ -74,10 +76,14 @@ Option& AddOption(char id, int flags, const char* desc)
 	return opt;
 }
 
+void AddInputFormat(InputFormat* pFormat)
+{
+	assert(pFormat != NULL);
+	formats.push_back(pFormat);
+}
+
 static void DumpOptions()
 {
-	using namespace std;
-
 	OptionMap::iterator it = options.begin();
 
 	cout << "  Options:" << endl;
@@ -116,11 +122,37 @@ static void DumpOptions()
 
 }
 
+static void DumpSupportedFormats()
+{
+	FormatList::iterator it = formats.begin();
+
+	cout << "  Supported formats: " << endl;
+
+	while (it != formats.end())
+	{
+		cout << "    " << (*it)->GetName() << endl;
+
+		it++;
+	}
+}
+
+static void DumpHelp()
+{
+	cout << "ktxtool v0.1.0" << endl << endl;
+	cout << "  Usage: ktxtool -[OPTIONS]... FILEIN [FILEOUT]" << endl << endl;
+	
+	DumpOptions();
+
+	cout << endl << endl;
+
+	DumpSupportedFormats();
+
+	cout << endl << endl;
+
+}
+
 int main (int argc, char* argv[])
 {
-	using namespace std;
-
-
 	//define the options
 	AddOption('c', OPTION_EXPECTS_VALUE, "Use a compression format [ETC1, ETC2, PTVPR, ] (Currently not supported)");
 	AddOption('v', 0, "Verbose output");
@@ -130,14 +162,20 @@ int main (int argc, char* argv[])
 
 	if (argc < 2)
 	{
-		cout << "ktxtool v0.1.0" << endl << endl;
-		cout << "  Usage: ktxtool -[OPTIONS]... FILEIN [FILEOUT]" << endl << endl;
-		
-		DumpOptions();
-
-		cout << endl << endl;
-
+		DumpHelp();
 		return 1;
+	}
+
+	if (argc >= 2)
+	{
+		string arg1 = argv[1];
+		
+		if (arg1 == "--help" || arg1 == "-h")
+		{
+			DumpHelp();
+
+			return 0;
+		}
 	}
 	
 	

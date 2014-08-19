@@ -1,5 +1,5 @@
 # 
-# ktxtool, A convertion/compression tool for the KTX image format
+# ktxtool, A conversion and compression tool for the KTX image format
 #
 # Copyright (C) 2014 Luis Jimenez, www.kvbits.com
 #
@@ -29,6 +29,8 @@ find_package(TIFF REQUIRED)
 
 set(SOURCES 
 	source/ktxtool.cpp
+
+	source/Formats/tiff/TIFFInputFormat.cpp
 )
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -D_DEBUG")
