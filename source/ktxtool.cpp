@@ -27,6 +27,7 @@
 #include "ktxtool.h"
 
 
+#include <tiff.h>
 
 
 

@@ -24,7 +24,7 @@ project(ktxtool)
 
 
 #dependencies
-find_package(PNG REQUIRED)
+find_package(TIFF REQUIRED)
 
 
 set(SOURCES 
@@ -33,14 +33,14 @@ set(SOURCES
 
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -D_DEBUG")
 
-include_directories(source/ ${PNG_INCLUDE_DIRS})
+include_directories(source/ ${TIFF_INCLUDE_DIRS})
 
 
-target_link_libraries(${PNG_LIBRARY})
 
 
 add_executable(ktxtool ${SOURCES})
 
+target_link_libraries(ktxtool ${TIFF_LIBRARY})
 
 #install
 install(TARGETS ktxtool DESTINATION bin)
