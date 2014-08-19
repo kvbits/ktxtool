@@ -21,7 +21,7 @@
 
 #include "TIFFInputFormat.h"
 #include <tiffio.h>
-#include <string>
+#include <string.h>
 #include <ktxtool.h>
 #include <iostream>
 
@@ -34,9 +34,7 @@ static int RegisterTIFF()
 {
 	AddInputFormat(new TIFFInputFormat);
 
-	TIFF* tif = TIFFOpen("foo.tif", "r");
-
-	std::cout << tif << std::endl;
+//	TIFF* tif = TIFFOpen("foo.tif", "r");
 
 
 	return 0;
@@ -45,11 +43,9 @@ static int RegisterTIFF()
 int ktxtoolTIFF = RegisterTIFF();
 
 
-bool TIFFInputFormat::CheckExtension(const char* fileName) const
+bool TIFFInputFormat::CheckExtension(const char* ext) const
 {
-	string fn(fileName);
-
-	fn.find_first_of("tiff");
+	if (strcmp(ext, "tif") == 0 || strcmp(ext, "tiff") == 0) return true;
 
 	return false;
 }

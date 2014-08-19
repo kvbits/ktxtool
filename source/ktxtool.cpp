@@ -22,13 +22,13 @@
 #include <map>
 #include <list>
 #include <string>
+#include <fstream>
 #include <assert.h>
 #include <iomanip>
 #include "InputFormat.h"
 #include "ktxtool.h"
 
 
-#include <tiff.h>
 
 
 
@@ -149,6 +149,20 @@ static void DumpHelp()
 
 	cout << endl << endl;
 
+}
+
+static bool FileExists(const string& filePath)
+{
+	ifstream file(filePath.c_str());
+
+	if (file.good())
+	{
+		file.close();
+		return true;
+	}
+
+	file.close();
+	return false;
 }
 
 int main (int argc, char* argv[])
@@ -296,14 +310,67 @@ int main (int argc, char* argv[])
 		{
 			cerr << "option -" << opt.id << " is required (" << opt.desc << ")" << endl;
 
-			return opt.id;
+			return opt.id + 256;
 		}
 
 		it++;
 	}
 
-	//cout << "PROCESSING" << endl;
+	
+	//now that we have all the required options let's validate them
+	
+	//Make sure the input file exists
+	if (!FileExists(opt1->value))
+	{
+		cerr << "Input file doesn't exist" << endl;
+		return 7;
+	}
 
+
+	string strExt = opt1->value.substr(opt1->value.find_last_of(".") + 1);
+
+	if (strExt.size() == 0)
+	{
+		cerr << "Input file has no extension, therefore unabled to determine its format" << endl;
+		return 10;
+	}
+
+	InputFormat* pFormat = NULL;
+
+	//Look for compatible formats and create the pixel data
+	{	
+		FormatList::iterator it = formats.begin();
+
+		while (it != formats.end())
+		{
+
+			if ((*it)->CheckExtension(strExt.c_str()))
+			{
+				pFormat = (*it);
+				break;
+			}
+
+			it++;
+		}
+	}
+	
+	if (pFormat == NULL)
+	{
+		cerr << "Input format is not compatible" << endl;
+		return 8;
+	}
+
+	assert(pFormat != NULL);
+
+
+	//Get the pixel data and proceed with the convertion and compression
+	PixelData* pPixelData = pFormat->CreatePixelData(opt1->value.c_str());
+
+	if (pPixelData == NULL)
+	{
+		cerr << "Couldn't create pixel data from input file" << endl;
+		return 11;
+	}
 
 	return 0;
 }

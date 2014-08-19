@@ -40,7 +40,7 @@ public:
 	
 	
 
-	bool CheckExtension(const char* fileName) const;
+	bool CheckExtension(const char* ext) const;
 
 	PixelData* CreatePixelData(const char* filePath);
 

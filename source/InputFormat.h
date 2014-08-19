@@ -39,12 +39,12 @@ public:
 	virtual ~InputFormat() {}
 	
 
-	/** Checks if a given filename belongs to this format. Since a format 
+	/** Checks if a given str ext belongs to this format. Since a format 
 	 *  could have several extensions this method allows the program to 
 	 *  check to either one or multiple extensions on a per format basis.
 	 *
-	 *  return If the filename belongs to this format */
-	virtual bool CheckExtension(const char* fileName) const = 0;
+	 *  return If the str ext belongs to this format */
+	virtual bool CheckExtension(const char* ext) const = 0;
 
 
 
