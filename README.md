@@ -1,7 +1,7 @@
 ktxtool
 =======
 
-A convertion/compression tool for the KTX image format.
+A conversion and compression tool for the KTX image format.
 
 
 Current State
