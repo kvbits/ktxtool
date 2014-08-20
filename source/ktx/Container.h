@@ -97,6 +97,20 @@ public:
 	void Init(int w, int h);
 
 
+
+	/** Checks if the dimmension is square and power of 2 */
+	inline bool IsSqrPowerOf2()
+	{
+		const int w = m_header.pixelWidth;
+		const int h = m_header.pixelHeight;
+
+		assert(w != 0 && h !=0);
+
+		if (w != h) return false;
+
+		return w > 0 && !(w & (w − 1));
+	}
+
 };
 
 
