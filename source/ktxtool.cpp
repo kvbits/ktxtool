@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. 
  */
 
+
+#include "ktxtool.h"
 #include <iostream>
 #include <map>
 #include <list>
@@ -26,8 +28,8 @@
 #include <assert.h>
 #include <iomanip>
 #include "InputFormat.h"
-#include "ktxtool.h"
-
+#include "ktx/Container.h"
+#include "PixelData.h"
 
 
 
@@ -372,5 +374,28 @@ int main (int argc, char* argv[])
 		return 11;
 	}
 
+
+	//ktx container
+	Container ktx;
+
+	ktx.Init(pPixelData->GetWidth(), pPixelData->GetHeight());
+
+
 	return 0;
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

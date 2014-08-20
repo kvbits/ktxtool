@@ -26,9 +26,9 @@
 
 #include <string>
 
-using std::string;
 
 
+class InputFormat;
 
 
 enum OptionFlags
@@ -41,10 +41,12 @@ enum OptionFlags
 
 struct Option
 {
+	typedef std::string String;
+
 	char   id;
 	int    flags;
-	string value;
-	string desc;
+	String value;
+	String desc;
 
 	Option()
 	{

@@ -29,6 +29,7 @@ find_package(TIFF REQUIRED)
 
 set(SOURCES 
 	source/ktxtool.cpp
+	source/ktx/Container.cpp
 
 	source/Formats/tiff/TIFFInputFormat.cpp
 )

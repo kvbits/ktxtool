@@ -97,6 +97,11 @@ public:
 		return m_pData[i];
 	}
 
+
+	inline int GetWidth() const { return m_w; }
+	inline int GetHeight() const { return m_h; }
+	inline size_t GetPixelCount() { return m_w * m_h; }
+
 };
 
 
