@@ -24,9 +24,19 @@
 #include <string.h>
 #include <ktxtool.h>
 #include <iostream>
+#include <PixelData.h>
 
 
-using std::string;
+
+
+
+
+
+using namespace std;
+
+
+
+
 
 
 
@@ -34,7 +44,6 @@ static int RegisterTIFF()
 {
 	AddInputFormat(new TIFFInputFormat);
 
-//	TIFF* tif = TIFFOpen("foo.tif", "r");
 
 
 	return 0;
@@ -52,5 +61,45 @@ bool TIFFInputFormat::CheckExtension(const char* ext) const
 
 PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 {
+	TIFF* tif = TIFFOpen(filePath, "r");
+
+	if (tif != NULL)
+	{
+
+		
+		uint32 w, h;
+		size_t npixels;
+		uint32* raster;
+
+		TIFFGetField(tif, TIFFTAG_IMAGEWIDTH, &w);
+		TIFFGetField(tif, TIFFTAG_IMAGELENGTH, &h);
+
+		npixels = w * h;
+
+		cout << "Creating pixel data from TIFF Image " << w << " x " << h << " px" << endl;
+
+		raster = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
+
+		if (raster != NULL) 
+		{
+			if (TIFFReadRGBAImage(tif, w, h, raster, 0))
+			{
+				
+				PixelData* pData = new PixelData;
+
+				pData.Allocate(npixels);
+
+				
+
+			}
+			_TIFFfree(raster);
+		}
+
+		TIFFClose(tif);
+
+
+		return new PixelData();
+	}
+
 	return NULL;
 }
