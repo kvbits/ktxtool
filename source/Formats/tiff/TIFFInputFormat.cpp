@@ -25,7 +25,7 @@
 #include <ktxtool.h>
 #include <iostream>
 #include <PixelData.h>
-
+#include <fstream>
 
 
 
@@ -44,8 +44,6 @@ static int RegisterTIFF()
 {
 	AddInputFormat(new TIFFInputFormat);
 
-
-
 	return 0;
 }
 
@@ -61,6 +59,8 @@ bool TIFFInputFormat::CheckExtension(const char* ext) const
 
 PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 {
+	PixelData* pData = NULL;
+
 	TIFF* tif = TIFFOpen(filePath, "r");
 
 	if (tif != NULL)
@@ -85,21 +85,48 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 			if (TIFFReadRGBAImage(tif, w, h, raster, 0))
 			{
 				
-				PixelData* pData = new PixelData;
+				pData = new PixelData(w, h, PixelData::FORMAT_RGBA);
+			
+				/*ofstream ppm("./brick_rgb.ppm");	
 
-				pData.Allocate(npixels);
+				ppm << "P3" << endl;
+				ppm << w << " " << h << endl;
+				ppm << 255 << endl;*/
+		 
+				for (size_t y = 0; y < h; y++)
+				{
+					for (size_t x = 0; x < w; x++) 
+					{
+						uint32& packed = raster[(w * h)-((y * w) + (w - x))];
 
-				
+						PixelData::Pixel& pixel = pData->GetAt(x, y);
+							
+						pixel.r = TIFFGetR(packed);
+						pixel.g = TIFFGetG(packed);
+						pixel.b = TIFFGetB(packed);
+						pixel.a = TIFFGetA(packed);
+
+						pixel.r /= 255.f;
+						pixel.g /= 255.f;
+						pixel.b /= 255.f;
+						pixel.a /= 255.f;
+
+						/*ppm << pixel.r * 255.f << " ";
+						ppm << pixel.g * 255.f << " ";
+						ppm << pixel.b * 255.f << "	";*/
+					}
+
+					//ppm << endl;
+				}
+
 
 			}
 			_TIFFfree(raster);
 		}
 
 		TIFFClose(tif);
-
-
-		return new PixelData();
 	}
 
-	return NULL;
+
+	return pData;
 }

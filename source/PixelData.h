@@ -25,6 +25,8 @@
 
 
 
+#include <assert.h>
+#include <string>
 
 
 
@@ -34,14 +36,8 @@
  *  your textures for runtime usage in GL or even D3D. */
 class PixelData
 {
-protected:
-
-
-	Pixel*  m_pData;
-
 public:
-	
-	
+
 	/** Lossless as it gets (up to 32bits ofcourse) */
 	struct Pixel
 	{
@@ -51,43 +47,39 @@ public:
 		float a;
 	};
 
+
+protected:
+
+
+	Pixel*  m_pData;
+	int     m_w;
+	int     m_h;
+
+
+public:
 	
+	
+
+
+	/** The format it's just a hint as the pixel data has 4 components, 
+	 *  regardless of this. */
 	enum Format
 	{
 		FORMAT_RGB,
 		FORMAT_RGBA
 	};
 
-	enum ColorDepth
+	
+	/** Inlined as this is just a container class */
+	inline PixelData(int w, int h, Format format)
 	{
-		COLOR_DEPTH_8BIT,
-		COLOR_DEPTH_16BIT,
-		COLOR_DEPTH_24BIT,
-		COLOR_DEPTH_32BIT
-	};
-	
-
-	
-
-	
-	
-	inline PixelData()
-	{
-		m_pData = NULL;
+		m_w = w;
+		m_h = h;
+		m_pData = new Pixel[w * h];
 	}
 
+	/** Deletes the data if not null*/
 	inline ~PixelData()
-	{
-		Free();
-		
-	}
-
-	inline void Allocate(size_t N)
-	{
-		m_pData = new Pixel[N];
-	}
-
-	inline void Free()
 	{
 		if (m_pData)
 		{
@@ -96,6 +88,14 @@ public:
 		}
 	}
 
+	
+	inline Pixel& GetAt(int x, int y)
+	{
+		size_t i = (m_w * m_h) - ((y * m_w) + (m_w - x));
+
+
+		return m_pData[i];
+	}
 
 };
 
