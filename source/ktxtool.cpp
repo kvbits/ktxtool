@@ -379,8 +379,14 @@ int main (int argc, char* argv[])
 	Container ktx;
 
 	ktx.Init(pPixelData->GetWidth(), pPixelData->GetHeight(), 1, 1);
+	ktx.SetData(0, 0, pPixelData, true);
 
-	ktx.SetData(0, 0, pPixelData);
+	//we don't need the pixel data anymore
+	delete pPixelData;
+
+	ktx.GenerateMipmaps();
+
+	ktx.Write("./test.ktx");
 
 	return 0;
 }

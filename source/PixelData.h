@@ -45,8 +45,8 @@ public:
 	struct Pixel
 	{
 		float r;
-		float b;
 		float g;
+		float b;
 		float a;
 	};
 
@@ -95,6 +95,11 @@ public:
 
 
 		return m_pData[i];
+	}
+
+	inline float* GetRaw(int i)
+	{
+		return (float*)&m_pData[i];
 	}
 
 	inline Format GetFormat() const { return m_format; }

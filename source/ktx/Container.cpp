@@ -22,6 +22,11 @@
 #include <ktxtool.h>
 #include <assert.h>
 #include <Types.h>
+#include <PixelData.h>
+#include <iostream>
+#include <math.h>
+
+
 
 
 
@@ -56,6 +61,25 @@ void Container::Init(int w, int h, int elementCount, int faceCount)
 	m_header.numberOfFaces = faceCount;
 	m_header.numberOfMipmapLevels = 0;
 	m_header.bytesOfKeyValueData = 0;
+
+	m_elements.resize(elementCount);
+
+	for (size_t i = 0; i < m_elements.size(); i++)
+	{
+		MipmapArray& mmps = m_elements[i];
+		
+		mmps.resize(1);
+
+		mmps[0].faces.resize(faceCount);
+
+		for (size_t f = 0; f < mmps[0].faces.size(); f++)
+		{
+			mmps[0].faces[f].pData = NULL;
+		}
+
+		mmps[0].w = m_header.pixelWidth;
+		mmps[0].h = m_header.pixelHeight;
+	}
 }
 
 bool Container::HasValidIdentifier() const
@@ -103,7 +127,7 @@ void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 	}
 }
 
-void Container::SetData(int elementIndex, int faceIndex, PixelData* pData)
+void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool generateMipmaps)
 {
 	assert((size_t)elementIndex < m_elements.size());
 
@@ -113,9 +137,67 @@ void Container::SetData(int elementIndex, int faceIndex, PixelData* pData)
 
 	Face& face = mmps[0].faces[faceIndex];
 
-	face.pData = NULL;	
+	const int compCount = m_format == FORMAT_RGBA ? 4 : 3;
+
+	face.pData = new uint8_t[pData->GetPixelCount() * compCount];
+
+	for (size_t i = 0; i < pData->GetPixelCount(); i++)
+	{
+		for (int c = 0; c < compCount; c++)
+		{
+			((uint8_t*)face.pData)[i + c] = (uint8_t)(pData->GetRaw(i)[c] * 255.f);
+		}
+	}
 }
 
+void Container::GenerateMipmaps()
+{
+	using namespace std;
+
+	if (!IsSqrPowerOf2())
+	{
+		cout << "KTX Container: Unable to generate mipmaps (non square power of 2)" << endl;
+		return;
+	}
+
+	m_header.numberOfMipmapLevels = 1 + floor(log10((float)m_header.pixelWidth) / log10(2.0f));
+
+	cout << m_header.numberOfMipmapLevels << endl;
+
+	for (size_t e = 0; e < m_elements.size(); e++)
+	{
+		//make sure this only has the original mipmal
+		assert(m_elements[e].size() == 1);
+
+		int refW = m_elements[e][0].w;
+		int refH = m_elements[e][0].h;
+		Face& refFace = m_elements[e][0].faces[0];
+			
+		assert(refFace.pData != NULL);
+
+		m_elements[e].resize(m_header.numberOfMipmapLevels);
+
+		for (size_t m = 1; m < m_elements[e].size(); m++)
+		{
+			MipmapLevel& mmp = m_elements[e][m];
+			
+			mmp.w = (refW >> m);
+			mmp.h = (refH >> m);
+
+			cout << mmp.w << " - " << mmp.h << endl;
+		}
+	}
+}
+
+bool Container::Write(const char* filePath) const
+{
+	return false;
+}
+
+bool Container::Read(const char* filePath) const
+{
+	return false;
+}
 
 
 

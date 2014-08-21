@@ -96,7 +96,6 @@ public:
 	typedef std::vector<MipmapLevel> MipmapArray;
 
 
-	//1+floor(log10((float)max(m_uiWidth, m_uiHeight))/log10(2.0));
 
 	
 	typedef std::vector<MipmapArray> ElementArray;
@@ -145,7 +144,30 @@ public:
 	/** This allocates and sets the pixel data in its final format. 
 	 *  The format and compression should be defined before calling 
 	 *  this method. */
-	void SetData(int elementIndex, int faceIndex, PixelData* pData);
+	void SetData(int elementIndex, int faceIndex, PixelData* pData, bool generateMipmaps = false);
+
+
+
+	
+	/** Generates mipmaps if the dimmensions allows it. Even tho some devices support
+	 *  non-power of 2 mipmaps, this method does not support it to discourage bad art 
+	 *  practices. */
+	void GenerateMipmaps();
+
+	
+
+	
+	/** Writes the ktx container to file. If there's an issue writing the file
+	 *  it will return false */
+	bool Write(const char* filePath) const;
+
+
+
+
+	/** Reads the container from a file. This will call init and initialize 
+	 *  everything up */
+	bool Read(const char* filePath) const;
+
 
 
 
