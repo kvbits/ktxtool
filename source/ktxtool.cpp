@@ -368,8 +368,6 @@ int main (int argc, char* argv[])
 	//Get the pixel data and proceed with the convertion and compression
 	PixelData* pPixelData = pFormat->CreatePixelData(opt1->value.c_str());
 
-	if (IsMipMapFriendlypPixelData->GetWidth())
-
 	if (pPixelData == NULL)
 	{
 		cerr << "Couldn't create pixel data from input file" << endl;
@@ -380,9 +378,9 @@ int main (int argc, char* argv[])
 	//ktx container
 	Container ktx;
 
-	ktx.Init(pPixelData->GetWidth(), pPixelData->GetHeight()i, 1, 1);
+	ktx.Init(pPixelData->GetWidth(), pPixelData->GetHeight(), 1, 1);
 
-	ktx.SetData(0, pPixelData);
+	ktx.SetData(0, 0, pPixelData);
 
 	return 0;
 }

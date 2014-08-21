@@ -27,6 +27,9 @@
 
 #include <assert.h>
 #include <string>
+#include <Types.h>
+
+
 
 
 
@@ -55,24 +58,21 @@ protected:
 	int     m_w;
 	int     m_h;
 
+	/** The format it's just a hint as the pixel data has 4 components, 
+	 *  regardless of this. */
+	Format  m_format;
+
 
 public:
 	
 	
 
 
-	/** The format it's just a hint as the pixel data has 4 components, 
-	 *  regardless of this. */
-	enum Format
-	{
-		FORMAT_RGB,
-		FORMAT_RGBA
-	};
-
 	
 	/** Inlined as this is just a container class */
 	inline PixelData(int w, int h, Format format)
 	{
+		m_format = format;
 		m_w = w;
 		m_h = h;
 		m_pData = new Pixel[w * h];
@@ -96,6 +96,8 @@ public:
 
 		return m_pData[i];
 	}
+
+	inline Format GetFormat() const { return m_format; }
 
 
 	inline int GetWidth() const { return m_w; }

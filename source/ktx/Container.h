@@ -27,36 +27,20 @@
 
 
 #include <string.h>
+#include <assert.h>
 #include <inttypes.h>
 #include <vector>
+#include <Types.h>
 
 
 
-//TODO parse this from an opengl header
-#define KTXTOOL_GL_RGB 6407
-#define KTXTOOL_GL_RGBA 6408
 
-#define KTXTOOL_GL_RGBA4 32854
-
-#define KTXTOOL_GL_UNSIGNED_BYTE 5121
 
 class Compression;
+class PixelData;
 
 
 
-enum Format
-{
-	FORMAT_RGB,
-	FORMAT_RGBA
-};
-
-enum ColorDepth
-{
-	COLOR_DEPTH_8BIT,
-	COLOR_DEPTH_16BIT,
-	COLOR_DEPTH_24BIT,
-	COLOR_DEPTH_32bit
-};
 
 
 
@@ -125,6 +109,8 @@ protected:
 	ElementArray  m_elements; //aka texture array
 
 	Compression*  m_pCompression;
+	Format        m_format;
+	ColorDepth    m_depth;
 
 
 public:
@@ -159,7 +145,7 @@ public:
 	/** This allocates and sets the pixel data in its final format. 
 	 *  The format and compression should be defined before calling 
 	 *  this method. */
-	void SetData(int elementIndex, int faceIndex PixelData* pData);
+	void SetData(int elementIndex, int faceIndex, PixelData* pData);
 
 
 
@@ -167,14 +153,14 @@ public:
 	/** Checks if the dimmension is square and power of 2 */
 	inline bool IsSqrPowerOf2()
 	{
-		const int w = m_header.pixelWidth;
-		const int h = m_header.pixelHeight;
+		int w = m_header.pixelWidth;
+		int h = m_header.pixelHeight;
 
 		assert(w != 0 && h !=0);
 
 		if (w != h) return false;
 
-		return w > 0 && !(w & (w − 1));
+		return w > 0 && !(w & (w - 1));
 	}
 
 

@@ -21,7 +21,7 @@
 #include "Container.h"
 #include <ktxtool.h>
 #include <assert.h>
-
+#include <Types.h>
 
 
 
@@ -37,7 +37,7 @@ Container::Container()
 	m_pCompression = NULL;
 }
 
-void Container::Init(int w, int h)
+void Container::Init(int w, int h, int elementCount, int faceCount)
 {
 	//set the ma
 	memcpy(m_header.identifier, KTX_IDENTIFIER, 12);
@@ -49,6 +49,13 @@ void Container::Init(int w, int h)
 
 	m_header.pixelWidth = w;
 	m_header.pixelHeight = h;
+
+	m_header.pixelDepth = 0; //only 2d/cube textures supported
+
+	m_header.numberOfArrayElements = elementCount;
+	m_header.numberOfFaces = faceCount;
+	m_header.numberOfMipmapLevels = 0;
+	m_header.bytesOfKeyValueData = 0;
 }
 
 bool Container::HasValidIdentifier() const
@@ -56,42 +63,57 @@ bool Container::HasValidIdentifier() const
 	return (memcmp(m_header.identifier, KTX_IDENTIFIER, 12) == 0);
 }
 
-void Container::SetFormat(int format, Compression* pComp)
+void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 {
 	m_pCompression = pComp;
+	m_format = format;
+	m_depth = depth;
 
+	
+	assert(depth == COLOR_DEPTH_8BIT && "non 8bit color depth not supported (yet)");
+
+	m_header.glType = KTXTOOL_GL_UNSIGNED_BYTE; //hardcoded for now
+	m_header.glTypeSize = sizeof(uint8_t); //hardcoded aswell TODO!!
+
+	switch (format)
+	{
+	case FORMAT_RGB:
+		{
+			m_header.glFormat = KTXTOOL_GL_RGB;
+			m_header.glInternalFormat = KTXTOOL_GL_RGB8;
+		}
+		break;
+	case FORMAT_RGBA:
+		{
+			m_header.glFormat = KTXTOOL_GL_RGBA;
+			m_header.glInternalFormat = KTXTOOL_GL_RGBA8;
+		}
+		break;
+	}
+
+	m_header.glBaseInternalFormat = m_header.glFormat;
+
+
+	//check for a compression format, if so override the variables
 	if (m_pCompression)
 	{
 		m_header.glType = 0;
 		m_header.glTypeSize = 1;
 		m_header.glFormat = 0;
 	}
-	else
-	{
-		m_header.glType = KTXTOOL_GL_UNSIGNED_BYTE; //hardcoded for now
-		m_header.glTypeSize = sizeof(uint8_t); //hardcoded aswell TODO!!
-		m_header.glFormat = format;
-
-		switch (format)
-		{
-		case KTXTOOL_GL_RGBA: m_jheader.glInternalFormat = KTXTOOL_RGBA8; break;
-		}
-	}
-
-	m_header.
 }
 
-void Container::SetData(int elementIndex, int faceIndex PixelData* pData)
+void Container::SetData(int elementIndex, int faceIndex, PixelData* pData)
 {
-	assert(elementIndex < m_elements.size());
+	assert((size_t)elementIndex < m_elements.size());
 
 	MipmapArray& mmps = m_elements[elementIndex]; 
 
-	assert(faceIndex < mmps.faces.size();
+	assert((size_t)faceIndex < mmps[0].faces.size());
 
-	Face& face = mmps.faces[faceIndex];
+	Face& face = mmps[0].faces[faceIndex];
 
-	
+	face.pData = NULL;	
 }
 
 

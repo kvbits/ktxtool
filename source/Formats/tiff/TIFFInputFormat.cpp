@@ -85,7 +85,7 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 			if (TIFFReadRGBAImage(tif, w, h, raster, 0))
 			{
 				//this allocates the internal pixel buffer	
-				pData = new PixelData(w, h, PixelData::FORMAT_RGBA);
+				pData = new PixelData(w, h, FORMAT_RGBA);
 			
 
 				/*ofstream ppm("./brick_rgb.ppm");	
