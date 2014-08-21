@@ -34,6 +34,7 @@
 
 Container::Container()
 {
+	m_pCompression = NULL;
 }
 
 void Container::Init(int w, int h)
@@ -54,3 +55,46 @@ bool Container::HasValidIdentifier() const
 {
 	return (memcmp(m_header.identifier, KTX_IDENTIFIER, 12) == 0);
 }
+
+void Container::SetFormat(int format, Compression* pComp)
+{
+	m_pCompression = pComp;
+
+	if (m_pCompression)
+	{
+		m_header.glType = 0;
+		m_header.glTypeSize = 1;
+		m_header.glFormat = 0;
+	}
+	else
+	{
+		m_header.glType = KTXTOOL_GL_UNSIGNED_BYTE; //hardcoded for now
+		m_header.glTypeSize = sizeof(uint8_t); //hardcoded aswell TODO!!
+		m_header.glFormat = format;
+
+		switch (format)
+		{
+		case KTXTOOL_GL_RGBA: m_jheader.glInternalFormat = KTXTOOL_RGBA8; break;
+		}
+	}
+
+	m_header.
+}
+
+void Container::SetData(int elementIndex, int faceIndex PixelData* pData)
+{
+	assert(elementIndex < m_elements.size());
+
+	MipmapArray& mmps = m_elements[elementIndex]; 
+
+	assert(faceIndex < mmps.faces.size();
+
+	Face& face = mmps.faces[faceIndex];
+
+	
+}
+
+
+
+
+

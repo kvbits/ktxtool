@@ -28,8 +28,35 @@
 
 #include <string.h>
 #include <inttypes.h>
+#include <vector>
 
 
+
+//TODO parse this from an opengl header
+#define KTXTOOL_GL_RGB 6407
+#define KTXTOOL_GL_RGBA 6408
+
+#define KTXTOOL_GL_RGBA4 32854
+
+#define KTXTOOL_GL_UNSIGNED_BYTE 5121
+
+class Compression;
+
+
+
+enum Format
+{
+	FORMAT_RGB,
+	FORMAT_RGBA
+};
+
+enum ColorDepth
+{
+	COLOR_DEPTH_8BIT,
+	COLOR_DEPTH_16BIT,
+	COLOR_DEPTH_24BIT,
+	COLOR_DEPTH_32bit
+};
 
 
 
@@ -63,22 +90,41 @@ public:
 		}
 
 
+	};	
+
+	struct Face
+	{
+		void* pData;
+		size_t size;
 	};
 
+	typedef std::vector<Face> FaceArray;
 
 	/** Mipmap level */
 	struct MipmapLevel
 	{
-		
+		int w;
+		int h;
+		FaceArray faces; //usually just 1 if not a cubemap
 	};
 
+	
+	typedef std::vector<MipmapLevel> MipmapArray;
+
+
+	//1+floor(log10((float)max(m_uiWidth, m_uiHeight))/log10(2.0));
+
+	
+	typedef std::vector<MipmapArray> ElementArray;
 
 
 protected:
 
 
-	Header    m_header;
+	Header        m_header;
+	ElementArray  m_elements; //aka texture array
 
+	Compression*  m_pCompression;
 
 
 public:
@@ -92,9 +138,29 @@ public:
 	/** Checks the header for the identifier, assuming this was loaded from file */
 	bool HasValidIdentifier() const;
 
+
+
 	
-	/** Initialized the header for write operations */
-	void Init(int w, int h);
+	/** Initialized the header for write operations. 
+	 *  Element and face count initialized the internal arrays
+	 *  and header members. */
+	void Init(int w, int h, int elementCount, int faceCount);
+
+
+
+
+	/** Sets the format, color depth and compression. This must be called before
+	 *  SetData. This method takes ownership of the compression object. */
+	void SetFormat(Format format, ColorDepth depth, Compression* pComp = NULL);
+
+
+
+
+	/** This allocates and sets the pixel data in its final format. 
+	 *  The format and compression should be defined before calling 
+	 *  this method. */
+	void SetData(int elementIndex, int faceIndex PixelData* pData);
+
 
 
 
@@ -110,6 +176,12 @@ public:
 
 		return w > 0 && !(w & (w − 1));
 	}
+
+
+
+
+
+
 
 };
 
