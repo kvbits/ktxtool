@@ -34,6 +34,7 @@ set(SOURCES
 	source/Formats/tiff/TIFFInputFormat.cpp
 )
 
+set(CMAKE_CXX_FLAGS " -std=c++0x ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -ggdb -D_DEBUG")
 
 include_directories(source/ ${TIFF_INCLUDE_DIRS})

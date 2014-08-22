@@ -379,6 +379,7 @@ int main (int argc, char* argv[])
 	Container ktx;
 
 	ktx.Init(pPixelData->GetWidth(), pPixelData->GetHeight(), 1, 1);
+	ktx.SetFormat(FORMAT_RGBA, COLOR_DEPTH_8BIT, NULL);
 	ktx.SetData(0, 0, pPixelData, true);
 
 	//we don't need the pixel data anymore

@@ -79,7 +79,6 @@ public:
 	struct Face
 	{
 		void* pData;
-		size_t size;
 	};
 
 	typedef std::vector<Face> FaceArray;
@@ -90,6 +89,8 @@ public:
 		int w;
 		int h;
 		FaceArray faces; //usually just 1 if not a cubemap
+
+		
 	};
 
 	
@@ -110,6 +111,11 @@ protected:
 	Compression*  m_pCompression;
 	Format        m_format;
 	ColorDepth    m_depth;
+
+
+	/** Downsamples the pixel data. The w and h params assume that the original size
+	 *  is twice as that. This also performs an average filter */
+	void* Downsample(void* pData, int w, int h);
 
 
 public:

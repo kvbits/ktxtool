@@ -25,14 +25,21 @@
 #include <PixelData.h>
 #include <iostream>
 #include <math.h>
-
-
+#include <fstream>
+#include <string>
 
 
 
 
 #define KTX_ENDIANNESS_NUMBER 0x04030201
 #define KTX_IDENTIFIER "«KTX 11»\r\n\x1A\n"
+
+
+
+
+
+using namespace std;
+
 
 
 
@@ -139,20 +146,24 @@ void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool 
 
 	const int compCount = m_format == FORMAT_RGBA ? 4 : 3;
 
+
 	face.pData = new uint8_t[pData->GetPixelCount() * compCount];
+
+	size_t i2 = 0;
 
 	for (size_t i = 0; i < pData->GetPixelCount(); i++)
 	{
 		for (int c = 0; c < compCount; c++)
 		{
 			((uint8_t*)face.pData)[i + c] = (uint8_t)(pData->GetRaw(i)[c] * 255.f);
+
+			i2++;
 		}
 	}
 }
 
 void Container::GenerateMipmaps()
 {
-	using namespace std;
 
 	if (!IsSqrPowerOf2())
 	{
@@ -179,14 +190,75 @@ void Container::GenerateMipmaps()
 
 		for (size_t m = 1; m < m_elements[e].size(); m++)
 		{
+			MipmapLevel& upmmp = m_elements[e][m - 1];
+
 			MipmapLevel& mmp = m_elements[e][m];
 			
 			mmp.w = (refW >> m);
 			mmp.h = (refH >> m);
 
-			cout << mmp.w << " - " << mmp.h << endl;
+			mmp.faces.resize(upmmp.faces.size());
+
+			for (size_t f = 0; f < mmp.faces.size(); f++)
+			{
+				mmp.faces[f].pData = Downsample(upmmp.faces[0].pData, upmmp.w, upmmp.h);
+
+
+				cout << mmp.w << " - " << mmp.h << endl;
+
+			}
+			
+			
 		}
 	}
+}
+
+
+void* Container::Downsample(void* pData, int w, int h)
+{
+
+	void* pDataOut = new uint8_t[w * h];
+
+	uint8_t* pixels = (uint8_t*)pData;
+
+	string fileOut = "./mipmap.";
+	fileOut += to_string((w / 2));
+	fileOut += "x";
+	fileOut += to_string((h / 2));
+	fileOut += ".ppm";
+
+	ofstream ppm(fileOut);	
+
+	ppm << "P3" << endl;
+	ppm << (w / 2) << " " << (h / 2) << endl;
+	ppm << 255 << endl;
+
+
+	size_t i2 = 0;
+
+	for (size_t y = 0; y < h; y += 2)
+	{
+		for (size_t x = 0; x < w; x += 2) 
+		{
+			uint8_t* pixel = &pixels[(w * h)-((y * w) + (w - x))];
+			
+			ppm << (int)pixel[0] << " ";
+			ppm << (int)pixel[1] << " ";
+			ppm << (int)pixel[2] << "	";
+			
+			for (size_t c = 0; c < 4; c++)
+			{
+				((uint8_t*)pDataOut)[i2] = pixel[c];
+				i2++;
+			}
+		}
+
+		ppm << endl;
+	}
+
+	ppm.close();
+
+	return pDataOut;
 }
 
 bool Container::Write(const char* filePath) const
