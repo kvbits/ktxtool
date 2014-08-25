@@ -76,7 +76,7 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 
 		npixels = w * h;
 
-		cout << "Creating pixel data from TIFF Image " << w << " x " << h << " px" << endl;
+		//cout << "Creating pixel data from TIFF Image " << w << " x " << h << " px" << endl;
 
 		raster = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
 
@@ -106,37 +106,6 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 					pixel[3] /= 255.f;
 				}
 
-				/*ofstream ppm("./brick_rgb.ppm");	
-
-				ppm << "P3" << endl;
-				ppm << w << " " << h << endl;
-				ppm << 255 << endl;*/
-		 
-				/*for (size_t y = 0; y < h; y++)
-				{
-					for (size_t x = 0; x < w; x++) 
-					{
-						uint32& packed = raster[(w * h)-((y * w) + (w - x))];
-
-						PixelData::Pixel& pixel = pData->GetAt(x, y);
-							
-						pixel.r = TIFFGetR(packed);
-						pixel.g = TIFFGetG(packed);
-						pixel.b = TIFFGetB(packed);
-						pixel.a = TIFFGetA(packed);
-
-						pixel.r /= 255.f;
-						pixel.g /= 255.f;
-						pixel.b /= 255.f;
-						pixel.a /= 255.f;
-
-						//ppm << pixel.r * 255.f << " ";
-						//ppm << pixel.g * 255.f << " ";
-						//ppm << pixel.b * 255.f << "	";
-					}
-
-					//ppm << endl;
-				}*/
 
 
 			}

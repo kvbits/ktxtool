@@ -365,6 +365,17 @@ int main (int argc, char* argv[])
 	assert(pFormat != NULL);
 
 
+	string outputFile = opt2->value;
+
+	if (outputFile.size() == 0)
+	{
+		size_t dotAt = opt1->value.find_last_of('.');
+
+		outputFile = opt1->value.substr(0, dotAt);
+		outputFile += ".ktx";
+	}
+
+
 	//Get the pixel data and proceed with the convertion and compression
 	PixelData* pPixelData = pFormat->CreatePixelData(opt1->value.c_str());
 
@@ -373,7 +384,6 @@ int main (int argc, char* argv[])
 		cerr << "Couldn't create pixel data from input file" << endl;
 		return 11;
 	}
-
 
 	//ktx container
 	Container ktx;
@@ -387,7 +397,7 @@ int main (int argc, char* argv[])
 
 	ktx.GenerateMipmaps();
 
-	ktx.Write("./test.ktx");
+	ktx.Write(outputFile.c_str());
 
 	return 0;
 }

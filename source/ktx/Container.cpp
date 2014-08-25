@@ -159,8 +159,6 @@ void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool 
 		((uint8_t*)face.pData)[i] = (pData->Get(i) * 255.f);
 	}
 
-
-	cout << (int)((uint8_t*)face.pData)[7] << endl;
 }
 
 void Container::GenerateMipmaps()
@@ -173,8 +171,6 @@ void Container::GenerateMipmaps()
 	}
 
 	m_header.numberOfMipmapLevels = 1 + floor(log10((float)m_header.pixelWidth) / log10(2.0f));
-
-	cout << m_header.numberOfMipmapLevels << endl;
 
 	for (size_t e = 0; e < m_elements.size(); e++)
 	{
@@ -205,13 +201,13 @@ void Container::GenerateMipmaps()
 				mmp.faces[f].pData = Downsample(upmmp.faces[f].pData, upmmp.w, upmmp.h);
 			}
 			
-			string fileOut = "./mipmap.";
+			/*string fileOut = "./mipmap.";
 			fileOut += to_string(upmmp.w);
 			fileOut += "x";
 			fileOut += to_string(upmmp.h);
 			fileOut += ".ppm";
 
-			WriteFaceToPPM(upmmp, 0, fileOut.c_str());
+			WriteFaceToPPM(upmmp, 0, fileOut.c_str());*/
 
 	
 		}
@@ -285,13 +281,10 @@ void* Container::Downsample(void* pData, int w, int h)
 		{
 			uint8_t* to = &((uint8_t*)pDataOut)[((w2 * h2)-(((y / 2) * w2) + (w2 - (x / 2)))) * m_comp];  
 	
-			GetAvgPx(pixels, to, m_comp, w, h, x, y);
-
-			
+			GetAvgPx(pixels, to, m_comp, w, h, x, y);	
 		}
 
 	}
-
 
 	return pDataOut;
 }
