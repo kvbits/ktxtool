@@ -39,29 +39,17 @@
  *  your textures for runtime usage in GL or even D3D. */
 class PixelData
 {
-public:
-
-	/** Lossless as it gets (up to 32bits ofcourse) */
-	struct Pixel
-	{
-		float r;
-		float g;
-		float b;
-		float a;
-	};
-
-
 protected:
 
 
-	Pixel*  m_pData;
+	float*  m_pData;
 	int     m_w;
 	int     m_h;
+	int     m_compCount;
 
 	/** The format it's just a hint as the pixel data has 4 components, 
 	 *  regardless of this. */
 	Format  m_format;
-
 
 public:
 	
@@ -72,10 +60,16 @@ public:
 	/** Inlined as this is just a container class */
 	inline PixelData(int w, int h, Format format)
 	{
+		switch (format)
+		{
+		case FORMAT_RGB:  m_compCount = 3; break;
+		case FORMAT_RGBA: m_compCount = 4; break;
+		}
+
 		m_format = format;
 		m_w = w;
 		m_h = h;
-		m_pData = new Pixel[w * h];
+		m_pData = new float[(w * h) * m_compCount];
 	}
 
 	/** Deletes the data if not null*/
@@ -89,17 +83,22 @@ public:
 	}
 
 	
-	inline Pixel& GetAt(int x, int y)
+	/*inline Pixel& GetAt(int x, int y)
 	{
 		size_t i = (m_w * m_h) - ((y * m_w) + (m_w - x));
 
 
 		return m_pData[i];
+	}*/
+
+	inline float& Get(int i)
+	{
+		return m_pData[i];
 	}
 
-	inline float* GetRaw(int i)
+	inline float* GetPixel(int i)
 	{
-		return (float*)&m_pData[i];
+		return m_pData + (i * m_compCount);
 	}
 
 	inline Format GetFormat() const { return m_format; }
@@ -108,6 +107,7 @@ public:
 	inline int GetWidth() const { return m_w; }
 	inline int GetHeight() const { return m_h; }
 	inline size_t GetPixelCount() { return m_w * m_h; }
+	inline int GetComponentCount() const { return m_compCount; }
 
 };
 

@@ -113,9 +113,13 @@ protected:
 	ColorDepth    m_depth;
 
 
-	/** Downsamples the pixel data. The w and h params assume that the original size
-	 *  is twice as that. This also performs an average filter */
+	/** Downsamples the pixel data. The final size will be half of the dimmesion provided.
+	 *  This also performs an average filter. */
 	void* Downsample(void* pData, int w, int h);
+
+
+	/** Writes a mipmap face to a text PPM file for debugging purposes */
+	void WriteFaceToPPM(MipmapLevel& mmp, int faceIndex, const char* filePath);
 
 
 public:

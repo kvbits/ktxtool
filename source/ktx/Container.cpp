@@ -144,22 +144,19 @@ void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool 
 
 	Face& face = mmps[0].faces[faceIndex];
 
-	const int compCount = m_format == FORMAT_RGBA ? 4 : 3;
+	const int compCount = pData->GetComponentCount();
 
 
 	face.pData = new uint8_t[pData->GetPixelCount() * compCount];
 
-	size_t i2 = 0;
 
-	for (size_t i = 0; i < pData->GetPixelCount(); i++)
+	for (size_t i = 0; i < pData->GetPixelCount() * compCount; i++)
 	{
-		for (int c = 0; c < compCount; c++)
-		{
-			((uint8_t*)face.pData)[i + c] = (uint8_t)(pData->GetRaw(i)[c] * 255.f);
-
-			i2++;
-		}
+		((uint8_t*)face.pData)[i] = (pData->Get(i) * 255.f);
 	}
+
+
+	cout << (int)((uint8_t*)face.pData)[7] << endl;
 }
 
 void Container::GenerateMipmaps()
@@ -201,15 +198,21 @@ void Container::GenerateMipmaps()
 
 			for (size_t f = 0; f < mmp.faces.size(); f++)
 			{
-				mmp.faces[f].pData = Downsample(upmmp.faces[0].pData, upmmp.w, upmmp.h);
-
-
-				cout << mmp.w << " - " << mmp.h << endl;
-
+				mmp.faces[f].pData = Downsample(upmmp.faces[f].pData, upmmp.w, upmmp.h);
 			}
 			
-			
+			string fileOut = "./mipmap.";
+			fileOut += to_string(upmmp.w);
+			fileOut += "x";
+			fileOut += to_string(upmmp.h);
+			fileOut += ".ppm";
+
+			WriteFaceToPPM(upmmp, 0, fileOut.c_str());
+
+	
 		}
+
+		
 	}
 }
 
@@ -221,36 +224,69 @@ void* Container::Downsample(void* pData, int w, int h)
 
 	uint8_t* pixels = (uint8_t*)pData;
 
-	string fileOut = "./mipmap.";
-	fileOut += to_string((w / 2));
-	fileOut += "x";
-	fileOut += to_string((h / 2));
-	fileOut += ".ppm";
 
-	ofstream ppm(fileOut);	
+	int i2 = 0;
 
-	ppm << "P3" << endl;
-	ppm << (w / 2) << " " << (h / 2) << endl;
-	ppm << 255 << endl;
-
-
-	size_t i2 = 0;
-
-	for (size_t y = 0; y < h; y += 2)
+	for (int y = 0; y < h; y += 2)
 	{
-		for (size_t x = 0; x < w; x += 2) 
+		for (int x = 0; x < w; x += 2) 
 		{
 			uint8_t* pixel = &pixels[(w * h)-((y * w) + (w - x))];
 			
-			ppm << (int)pixel[0] << " ";
-			ppm << (int)pixel[1] << " ";
-			ppm << (int)pixel[2] << "	";
-			
-			for (size_t c = 0; c < 4; c++)
+			for (int c = 0; c < 4; c++)
 			{
 				((uint8_t*)pDataOut)[i2] = pixel[c];
 				i2++;
 			}
+		}
+
+	}
+
+
+	return pDataOut;
+}
+
+
+void Container::WriteFaceToPPM(MipmapLevel& mmp, int faceIndex, const char* filePath)
+{
+	ofstream ppm(filePath);	
+
+	size_t w = mmp.w;
+	size_t h = mmp.h;
+
+	assert((size_t)faceIndex < mmp.faces.size());
+
+	uint8_t* pixels = (uint8_t*)mmp.faces[faceIndex].pData;
+
+	ppm << "P3" << endl;
+	ppm << (int)w << " " << (int)h << endl;
+	ppm << 255 << endl;
+
+	
+	/*for (size_t i = 0; i < w * h; i += 4)
+	{
+		ppm << (int)pixels[i + 0] << " ";
+		ppm << (int)pixels[i + 1] << " ";
+		ppm << (int)pixels[i + 2] << "	";
+	}
+
+	ppm << endl;
+
+	ppm.close();
+
+	return;*/
+
+	size_t i = 0;
+
+	for (size_t y = 0; y < h; y++)
+	{
+		for (size_t x = 0; x < w; x++) 
+		{
+			uint8_t* pixel = &pixels[((w * h) - ((y * w) + (w - x))) * 4];
+			
+			ppm << (int)pixel[0] << " ";
+			ppm << (int)pixel[1] << " ";
+			ppm << (int)pixel[2] << "	";
 		}
 
 		ppm << endl;
@@ -258,7 +294,7 @@ void* Container::Downsample(void* pData, int w, int h)
 
 	ppm.close();
 
-	return pDataOut;
+	cout << "Face writed to " << filePath << endl;
 }
 
 bool Container::Write(const char* filePath) const

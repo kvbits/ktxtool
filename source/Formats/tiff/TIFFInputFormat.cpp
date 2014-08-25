@@ -86,7 +86,25 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 			{
 				//this allocates the internal pixel buffer	
 				pData = new PixelData(w, h, FORMAT_RGBA);
-			
+
+
+				for (size_t i = 0; i < npixels; i++)
+				{
+					uint32& packed = raster[i];
+					
+
+					float* pixel = pData->GetPixel(i);
+							
+					pixel[0] = TIFFGetR(packed);
+					pixel[1] = TIFFGetG(packed);
+					pixel[2] = TIFFGetB(packed);
+					pixel[3] = TIFFGetA(packed);
+					
+					pixel[0] /= 255.f;
+					pixel[1] /= 255.f;
+					pixel[2] /= 255.f;
+					pixel[3] /= 255.f;
+				}
 
 				/*ofstream ppm("./brick_rgb.ppm");	
 
@@ -94,7 +112,7 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 				ppm << w << " " << h << endl;
 				ppm << 255 << endl;*/
 		 
-				for (size_t y = 0; y < h; y++)
+				/*for (size_t y = 0; y < h; y++)
 				{
 					for (size_t x = 0; x < w; x++) 
 					{
@@ -112,13 +130,13 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 						pixel.b /= 255.f;
 						pixel.a /= 255.f;
 
-						/*ppm << pixel.r * 255.f << " ";
-						ppm << pixel.g * 255.f << " ";
-						ppm << pixel.b * 255.f << "	";*/
+						//ppm << pixel.r * 255.f << " ";
+						//ppm << pixel.g * 255.f << " ";
+						//ppm << pixel.b * 255.f << "	";
 					}
 
 					//ppm << endl;
-				}
+				}*/
 
 
 			}
