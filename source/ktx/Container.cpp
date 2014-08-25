@@ -99,12 +99,13 @@ void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 	m_pCompression = pComp;
 	m_format = format;
 	m_depth = depth;
-
 	
 	assert(depth == COLOR_DEPTH_8BIT && "non 8bit color depth not supported (yet)");
 
 	m_header.glType = KTXTOOL_GL_UNSIGNED_BYTE; //hardcoded for now
 	m_header.glTypeSize = sizeof(uint8_t); //hardcoded aswell TODO!!
+
+	m_comp = 0;
 
 	switch (format)
 	{
@@ -112,15 +113,19 @@ void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 		{
 			m_header.glFormat = KTXTOOL_GL_RGB;
 			m_header.glInternalFormat = KTXTOOL_GL_RGB8;
+			m_comp = 3;
 		}
 		break;
 	case FORMAT_RGBA:
 		{
 			m_header.glFormat = KTXTOOL_GL_RGBA;
 			m_header.glInternalFormat = KTXTOOL_GL_RGBA8;
+			m_comp = 4;
 		}
 		break;
 	}
+
+	assert(m_comp > 0);
 
 	m_header.glBaseInternalFormat = m_header.glFormat;
 
@@ -144,13 +149,12 @@ void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool 
 
 	Face& face = mmps[0].faces[faceIndex];
 
-	const int compCount = pData->GetComponentCount();
+	assert(m_comp == pData->GetComponentCount());
+
+	face.pData = new uint8_t[pData->GetPixelCount() * m_comp];
 
 
-	face.pData = new uint8_t[pData->GetPixelCount() * compCount];
-
-
-	for (size_t i = 0; i < pData->GetPixelCount() * compCount; i++)
+	for (size_t i = 0; i < pData->GetPixelCount() * m_comp; i++)
 	{
 		((uint8_t*)face.pData)[i] = (pData->Get(i) * 255.f);
 	}
@@ -217,27 +221,73 @@ void Container::GenerateMipmaps()
 }
 
 
+static void GetAvgPx(uint8_t* pixels, uint8_t* out, int comp, int w, int h, int x, int y)
+{
+	//uint8_t pixel[4];
+	//uint8_t* pixel = &pixels[((w * h)-((y * w) + (w - x))) * comp];
+
+	auto GetAvgComp = [&](int c) -> uint8_t
+	{
+		//counts how many pixels have been added
+		int against = 1;
+
+		float avg = 0.0f;
+
+		//return float as the avg is done in a normalized space
+		auto At = [&](int ix, int iy)
+		{
+			int fx = x + ix;
+			int fy = y + iy;
+
+			if (fx >= w || fx < 0 || fy >= h || fy < 0)
+			{
+				return;
+			}
+
+			uint8_t* pixel = &pixels[((w * h) - ((fy * w) + (w - fx))) * comp];
+
+			against++;
+
+			avg += pixel[c] / 255.f;
+		};
+
+		At(0, 0);
+
+		At(1, 1);  At(-1, -1);
+		At(0, 1);  At(0, -1);
+		At(1, 0);  At(-1, 0);
+		At(1, -1); At(-1, 1);
+
+		return (avg / against) * 255.f;
+	};
+
+
+	//allow maximum 4 components per pixel
+	for (int c = 0; c < comp; c++)
+	{
+		out[c] = GetAvgComp(c);
+	}
+}
+
 void* Container::Downsample(void* pData, int w, int h)
 {
+	int w2 = w / 2;
+	int h2 = h / 2;
 
-	void* pDataOut = new uint8_t[w * h];
+	void* pDataOut = new uint8_t[(w2 * h2) * m_comp];
 
 	uint8_t* pixels = (uint8_t*)pData;
 
-
-	int i2 = 0;
 
 	for (int y = 0; y < h; y += 2)
 	{
 		for (int x = 0; x < w; x += 2) 
 		{
-			uint8_t* pixel = &pixels[(w * h)-((y * w) + (w - x))];
+			uint8_t* to = &((uint8_t*)pDataOut)[((w2 * h2)-(((y / 2) * w2) + (w2 - (x / 2)))) * m_comp];  
+	
+			GetAvgPx(pixels, to, m_comp, w, h, x, y);
+
 			
-			for (int c = 0; c < 4; c++)
-			{
-				((uint8_t*)pDataOut)[i2] = pixel[c];
-				i2++;
-			}
 		}
 
 	}
@@ -262,27 +312,12 @@ void Container::WriteFaceToPPM(MipmapLevel& mmp, int faceIndex, const char* file
 	ppm << (int)w << " " << (int)h << endl;
 	ppm << 255 << endl;
 
-	
-	/*for (size_t i = 0; i < w * h; i += 4)
-	{
-		ppm << (int)pixels[i + 0] << " ";
-		ppm << (int)pixels[i + 1] << " ";
-		ppm << (int)pixels[i + 2] << "	";
-	}
-
-	ppm << endl;
-
-	ppm.close();
-
-	return;*/
-
-	size_t i = 0;
 
 	for (size_t y = 0; y < h; y++)
 	{
 		for (size_t x = 0; x < w; x++) 
 		{
-			uint8_t* pixel = &pixels[((w * h) - ((y * w) + (w - x))) * 4];
+			uint8_t* pixel = &pixels[((w * h) - ((y * w) + (w - x))) * m_comp];
 			
 			ppm << (int)pixel[0] << " ";
 			ppm << (int)pixel[1] << " ";

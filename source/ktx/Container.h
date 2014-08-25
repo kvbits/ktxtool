@@ -111,6 +111,7 @@ protected:
 	Compression*  m_pCompression;
 	Format        m_format;
 	ColorDepth    m_depth;
+	int           m_comp;
 
 
 	/** Downsamples the pixel data. The final size will be half of the dimmesion provided.
