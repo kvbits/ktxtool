@@ -25,7 +25,6 @@ project(ktxtool)
 
 option(WITH-PPM "Build with non-lib dependant .ppm support" true)
 option(WITH-TIFF "Build with libtiff for standalone .tiff support" false)
-option(WITH-PNG "Build with libpng for standalone .png support" false)
 option(WITH-IMAGEMAGICK "Support for any* input formats" false)
 
 
@@ -44,6 +43,14 @@ set(LIBRARIES)
 if(WITH-IMAGEMAGICK)
 
 
+	add_definitions(-DKTXTOOL_MAGICK)
+	
+	find_package(ImageMagick REQUIRED)
+	find_package(ImageMagick COMPONENTS MagickWand REQUIRED)	
+
+	set(SOURCES ${SOURCES} source/Formats/imagick/MagickInputFormat.cpp)
+	set(INCLUDES ${INCLUDES} ${ImageMagick_INCLUDE_DIRS})
+	set(LIBRARIES ${LIBRARIES} ${ImageMagick_LIBRARIES})
 
 else(WITH-IMAGEMAGICK)
 	#else because with imagemagick we dont need specific support for other formats
@@ -53,7 +60,6 @@ else(WITH-IMAGEMAGICK)
 		set(SOURCES ${SOURCES} source/Formats/ppm/PPMInputFormat.cpp)
 
 	endif(WITH-PPM)
-
 
 
 	#With libtiff support

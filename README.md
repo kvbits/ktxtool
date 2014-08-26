@@ -1,13 +1,25 @@
 ktxtool
-=======
+========
 
-A conversion and compression tool for the KTX image format.
+A conversion and compression tool for the KTX image format. See more here http://www.khronos.org/opengles/sdk/tools/KTX/file_format_spec/
 
+It supports PPM input format without any external dependency. But also TIFF, PNG and JPG as a standalone implementations. It also has an ImageMagick implementation (that suppports all major file formats).
+
+Building
+-------------
+If you want to use imagemagick set the cmake option WITH-IMAGEMAGICK to true like this:
+
+cmake -DWITH-IMAGEMAGICK=true
+
+Be aware that this will disable all other "WITH" options as imagemagick already implement those formats and they're not needed.
 
 Current State
-=======
+-------------
+Only RGB8 and RGBA8 is supported either raw or compressed, as for compression goes only ETC1 is implemented. I made this tool for mobile development so even if this tool is far from complete it could be used for production already if your usage match mine.
 
-Compression is missing (only raw rgb supported), ETC1 format is expected in the short term.
+TODO
+--------
+PNG and JPG input formats are expected before v0.2.0
 
-Even if TIFF is the only supported input format the underlaying code allows to extend it with ease.
+S3TC compression is expected before v0.2.0
 

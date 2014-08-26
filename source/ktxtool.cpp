@@ -174,6 +174,7 @@ int main (int argc, char* argv[])
 	AddOption('v', 0, "Verbose output");
 	AddOption('f', OPTION_REQUIRED | OPTION_EXPECTS_VALUE, "Input file");
 	AddOption('o', OPTION_EXPECTS_VALUE, "Output file");
+	AddOption('d', 0, "Dumps mipmaps as individual ppm files");
 
 
 	if (argc < 2)
@@ -358,7 +359,7 @@ int main (int argc, char* argv[])
 	
 	if (pFormat == NULL)
 	{
-		cerr << "Input format is not compatible" << endl;
+		cerr << "Input format is not supported" << endl;
 		return 8;
 	}
 

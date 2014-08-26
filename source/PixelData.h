@@ -103,6 +103,7 @@ public:
 
 	inline Format GetFormat() const { return m_format; }
 
+	inline void* GetData() { return m_pData; }
 
 	inline int GetWidth() const { return m_w; }
 	inline int GetHeight() const { return m_h; }

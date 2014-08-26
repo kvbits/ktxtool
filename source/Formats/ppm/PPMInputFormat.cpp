@@ -125,9 +125,12 @@ PixelData* PPMInputFormat::CreatePixelData(const char* filePath)
 	//fixes the row order to match the standards
 	auto GetIndex = [&]() -> int
 	{
-		int x = i % w;
+		//Removed, suspected as a bug	
+		/*int x = i % w;
 		int y = (i - x) / w;
-		return ((w * h) - ((y * w) + (w - x))) * 3;
+		return ((w * h) - ((y * w) + (w - x))) * 3;*/
+
+		return i * 3;
 	};
 	
 	while (i < pData->GetPixelCount())

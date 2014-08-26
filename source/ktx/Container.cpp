@@ -110,6 +110,7 @@ void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 
 	m_header.glType = KTXTOOL_GL_UNSIGNED_BYTE; //hardcoded for now
 	m_header.glTypeSize = sizeof(uint8_t); //hardcoded aswell TODO!!
+	m_header.numberOfMipmapLevels = 1;
 
 	m_comp = 0;
 
@@ -167,9 +168,26 @@ void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool 
 
 void Container::GenerateMipmaps()
 {
+	auto DumpMipmap = [this](MipmapLevel& mmp)
+	{
+		string fileOut = "./mipmap.";
+		fileOut += to_string(mmp.w);
+		fileOut += "x";
+		fileOut += to_string(mmp.h);
+		fileOut += ".ppm";
+
+		WriteFaceToPPM(mmp, 0, 0, fileOut.c_str());
+	};
+
+
+	bool dumpMipmaps = GetOption('d')->IsDefined();
+
+	assert(m_mipmaps.size() == 1);
 
 	if (!IsSqrPowerOf2())
 	{
+		DumpMipmap(m_mipmaps[0]);
+
 		cout << "KTX Container: Unable to generate mipmaps (non square power of 2)" << endl;
 		return;
 	}
@@ -189,37 +207,37 @@ void Container::GenerateMipmaps()
 	Face& refFace = m_mipmaps[0].elems[0][0];
 		
 	assert(refFace.pData != NULL);
+	
 
-	for (size_t m = 1; m < m_mipmaps.size(); m++)
+
+	for (size_t m = 0; m < m_mipmaps.size(); m++)
 	{
-		MipmapLevel& upmmp = m_mipmaps[m - 1];
-
 		MipmapLevel& mmp = m_mipmaps[m];
-		
-		mmp.w = (refW >> m);
-		mmp.h = (refH >> m);
 
-		mmp.elems.resize(upmmp.elems.size());
-
-		for (size_t e = 0; e < mmp.elems.size(); e++)
+		if (m > 0)
 		{
-			mmp.elems[e].resize(upmmp.elems[e].size());
+			MipmapLevel& upmmp = m_mipmaps[m - 1];
 
-			for (size_t f = 0; f < mmp.elems[e].size(); f++)
-			{
-				mmp.elems[e][f].pData = Downsample(upmmp.elems[e][f].pData, upmmp.w, upmmp.h);
-			}
 			
+			mmp.w = (refW >> m);
+			mmp.h = (refH >> m);
+
+			mmp.elems.resize(upmmp.elems.size());
+
+			for (size_t e = 0; e < mmp.elems.size(); e++)
+			{
+				mmp.elems[e].resize(upmmp.elems[e].size());
+
+				for (size_t f = 0; f < mmp.elems[e].size(); f++)
+				{
+					mmp.elems[e][f].pData = Downsample(upmmp.elems[e][f].pData, upmmp.w, upmmp.h);
+				}
+				
+			}
 		}
 
-	
-		string fileOut = "./mipmap.";
-		fileOut += to_string(upmmp.w);
-		fileOut += "x";
-		fileOut += to_string(upmmp.h);
-		fileOut += ".ppm";
+		if (dumpMipmaps) DumpMipmap(mmp);
 
-		WriteFaceToPPM(upmmp, 0, 0, fileOut.c_str());
 	}
 }
 
@@ -315,7 +333,7 @@ void Container::WriteFaceToPPM(MipmapLevel& mmp, int elemIndex, int faceIndex, c
 	ppm << 255 << endl;
 
 
-	for (size_t y = 0; y < h; y++)
+	for (size_t y = (h-1); y < h; y--)
 	{
 		for (size_t x = 0; x < w; x++) 
 		{
@@ -331,7 +349,7 @@ void Container::WriteFaceToPPM(MipmapLevel& mmp, int elemIndex, int faceIndex, c
 
 	ppm.close();
 
-	cout << "Face writed to " << filePath << endl;
+	cout << "Face writen to " << filePath << endl;
 }
 
 bool Container::Write(const char* filePath) const

@@ -82,7 +82,7 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 
 		if (raster != NULL) 
 		{
-			if (TIFFReadRGBAImage(tif, w, h, raster, 0))
+			if (TIFFReadRGBAImageOriented(tif, w, h, raster, ORIENTATION_TOPLEFT, 0))
 			{
 				//this allocates the internal pixel buffer	
 				pData = new PixelData(w, h, FORMAT_RGBA);

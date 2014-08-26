@@ -18,8 +18,8 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. 
  */
 
-#ifndef __KTXTOOL_PPM_INPUTFORMAT_INCLUDED
-#define __KTXTOOL_PPM_INPUTFORMAT_INCLUDED
+#ifndef __KTXTOOL_MAGICK_INPUTFORMAT_INCLUDED
+#define __KTXTOOL_MAGICK_INPUTFORMAT_INCLUDED
 
 
 
@@ -34,7 +34,7 @@ class PixelData;
 
 
 
-class PPMInputFormat : public InputFormat
+class MagickInputFormat : public InputFormat
 {
 public:
 	
@@ -44,7 +44,10 @@ public:
 
 	PixelData* CreatePixelData(const char* filePath);
 
-	const char* GetName() const { return "PPM  - Portable Pixmap Format (Color)"; }
+	const char* GetName() const 
+	{ 
+		return "All major file formats, powered by ImageMagick"; 
+	}
 
 
 };
