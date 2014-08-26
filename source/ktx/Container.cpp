@@ -158,7 +158,7 @@ void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool 
 	face.pData = new uint8_t[pData->GetPixelCount() * m_comp];
 
 
-	for (size_t i = 0; i < pData->GetPixelCount() * m_comp; i++)
+	for (size_t i = 0; i < (size_t)pData->GetPixelCount() * m_comp; i++)
 	{
 		((uint8_t*)face.pData)[i] = (pData->Get(i) * 255.f);
 	}
@@ -213,13 +213,13 @@ void Container::GenerateMipmaps()
 		}
 
 	
-		/*string fileOut = "./mipmap.";
+		string fileOut = "./mipmap.";
 		fileOut += to_string(upmmp.w);
 		fileOut += "x";
 		fileOut += to_string(upmmp.h);
 		fileOut += ".ppm";
 
-		WriteFaceToPPM(upmmp, 0, 0, fileOut.c_str());*/
+		WriteFaceToPPM(upmmp, 0, 0, fileOut.c_str());
 	}
 }
 

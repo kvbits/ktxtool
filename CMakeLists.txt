@@ -23,28 +23,67 @@ cmake_minimum_required(VERSION 2.6)
 project(ktxtool)
 
 
-#dependencies
-find_package(TIFF REQUIRED)
+option(WITH-PPM "Build with non-lib dependant .ppm support" true)
+option(WITH-TIFF "Build with libtiff for standalone .tiff support" false)
+option(WITH-PNG "Build with libpng for standalone .png support" false)
+option(WITH-IMAGEMAGICK "Support for any* input formats" false)
 
+
+set(INCLUDES source/)
 
 set(SOURCES 
 	source/ktxtool.cpp
-	source/ktx/Container.cpp
-
-	source/Formats/tiff/TIFFInputFormat.cpp
+	source/ktx/Container.cpp	
 )
+
+set(LIBRARIES)
+
+
+
+#with imagemagick
+if(WITH-IMAGEMAGICK)
+
+
+
+else(WITH-IMAGEMAGICK)
+	#else because with imagemagick we dont need specific support for other formats
+
+	if(WITH-PPM)
+
+		set(SOURCES ${SOURCES} source/Formats/ppm/PPMInputFormat.cpp)
+
+	endif(WITH-PPM)
+
+
+
+	#With libtiff support
+	if(WITH-TIFF)
+		find_package(TIFF REQUIRED)
+
+		set(SOURCES ${SOURCES} source/Formats/tiff/TIFFInputFormat.cpp)
+		set(INCLUDES ${INCLUDES} ${TIFF_INCLUDE_DIRS})
+		set(LIBRARIES ${LIBRARIES} ${TIFF_LIBRARY})
+
+	endif(WITH-TIFF)
+
+
+endif(WITH-IMAGEMAGICK)
+
+
+
+
 
 set(CMAKE_CXX_FLAGS " -std=c++0x ${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -ggdb -D_DEBUG")
 
-include_directories(source/ ${TIFF_INCLUDE_DIRS})
+include_directories(source/ ${INCLUDES})
 
 
 
 
 add_executable(ktxtool ${SOURCES})
 
-target_link_libraries(ktxtool ${TIFF_LIBRARY})
+target_link_libraries(ktxtool ${LIBRARIES})
 
 #install
 install(TARGETS ktxtool DESTINATION bin)
