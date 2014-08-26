@@ -83,30 +83,27 @@ public:
 
 	typedef std::vector<Face> FaceArray;
 
+	
+	typedef std::vector<FaceArray> ElementArray;
+
 	/** Mipmap level */
 	struct MipmapLevel
 	{
 		int w;
 		int h;
-		FaceArray faces; //usually just 1 if not a cubemap
-
-		
+		uint32_t imgSize;
+		ElementArray elems;
 	};
 
 	
 	typedef std::vector<MipmapLevel> MipmapArray;
 
 
-
-	
-	typedef std::vector<MipmapArray> ElementArray;
-
-
 protected:
 
 
 	Header        m_header;
-	ElementArray  m_elements; //aka texture array
+	MipmapArray   m_mipmaps;
 
 	Compression*  m_pCompression;
 	Format        m_format;
@@ -120,7 +117,7 @@ protected:
 
 
 	/** Writes a mipmap face to a text PPM file for debugging purposes */
-	void WriteFaceToPPM(MipmapLevel& mmp, int faceIndex, const char* filePath);
+	void WriteFaceToPPM(MipmapLevel& mmp, int elemIndex, int faceIndex, const char* filePath);
 
 
 public:

@@ -32,7 +32,7 @@
 
 
 #define KTX_ENDIANNESS_NUMBER 0x04030201
-#define KTX_IDENTIFIER "«KTX 11»\r\n\x1A\n"
+#define KTX_IDENTIFIER "\xABKTX 11»\r\n\x1A\n"
 
 
 
@@ -69,24 +69,30 @@ void Container::Init(int w, int h, int elementCount, int faceCount)
 	m_header.numberOfMipmapLevels = 0;
 	m_header.bytesOfKeyValueData = 0;
 
-	m_elements.resize(elementCount);
 
-	for (size_t i = 0; i < m_elements.size(); i++)
+	m_mipmaps.resize(1);
+
+	MipmapLevel& mmp = m_mipmaps[0];
+
+
+	mmp.w = m_header.pixelWidth;
+	mmp.h = m_header.pixelHeight;
+
+
+	mmp.elems.resize(elementCount);
+
+	for (size_t e = 0; e < mmp.elems.size(); e++)
 	{
-		MipmapArray& mmps = m_elements[i];
-		
-		mmps.resize(1);
+		mmp.elems[e].resize(faceCount);
 
-		mmps[0].faces.resize(faceCount);
-
-		for (size_t f = 0; f < mmps[0].faces.size(); f++)
+		for (size_t f = 0; f < mmp.elems[e].size(); f++)
 		{
-			mmps[0].faces[f].pData = NULL;
+			mmp.elems[e][f].pData = NULL;
 		}
 
-		mmps[0].w = m_header.pixelWidth;
-		mmps[0].h = m_header.pixelHeight;
 	}
+
+
 }
 
 bool Container::HasValidIdentifier() const
@@ -141,13 +147,11 @@ void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 
 void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool generateMipmaps)
 {
-	assert((size_t)elementIndex < m_elements.size());
+	assert((size_t)elementIndex < m_mipmaps[0].elems.size()); 
 
-	MipmapArray& mmps = m_elements[elementIndex]; 
+	assert((size_t)faceIndex < m_mipmaps[0].elems[elementIndex].size());
 
-	assert((size_t)faceIndex < mmps[0].faces.size());
-
-	Face& face = mmps[0].faces[faceIndex];
+	Face& face = m_mipmaps[0].elems[elementIndex][faceIndex];
 
 	assert(m_comp == pData->GetComponentCount());
 
@@ -172,47 +176,50 @@ void Container::GenerateMipmaps()
 
 	m_header.numberOfMipmapLevels = 1 + floor(log10((float)m_header.pixelWidth) / log10(2.0f));
 
-	for (size_t e = 0; e < m_elements.size(); e++)
+	//resize the mipmap array
+	m_mipmaps.resize(m_header.numberOfMipmapLevels);
+
+	int refW = m_mipmaps[0].w;
+	int refH = m_mipmaps[0].h;
+
+	//make sure that the reference mipmap has valid face (assumes not cube map TODO)
+	assert(m_mipmaps[0].elems.size() == 1);
+	assert(m_mipmaps[0].elems[0].size() == 1);
+
+	Face& refFace = m_mipmaps[0].elems[0][0];
+		
+	assert(refFace.pData != NULL);
+
+	for (size_t m = 1; m < m_mipmaps.size(); m++)
 	{
-		//make sure this only has the original mipmal
-		assert(m_elements[e].size() == 1);
+		MipmapLevel& upmmp = m_mipmaps[m - 1];
 
-		int refW = m_elements[e][0].w;
-		int refH = m_elements[e][0].h;
-		Face& refFace = m_elements[e][0].faces[0];
-			
-		assert(refFace.pData != NULL);
+		MipmapLevel& mmp = m_mipmaps[m];
+		
+		mmp.w = (refW >> m);
+		mmp.h = (refH >> m);
 
-		m_elements[e].resize(m_header.numberOfMipmapLevels);
+		mmp.elems.resize(upmmp.elems.size());
 
-		for (size_t m = 1; m < m_elements[e].size(); m++)
+		for (size_t e = 0; e < mmp.elems.size(); e++)
 		{
-			MipmapLevel& upmmp = m_elements[e][m - 1];
+			mmp.elems[e].resize(upmmp.elems[e].size());
 
-			MipmapLevel& mmp = m_elements[e][m];
-			
-			mmp.w = (refW >> m);
-			mmp.h = (refH >> m);
-
-			mmp.faces.resize(upmmp.faces.size());
-
-			for (size_t f = 0; f < mmp.faces.size(); f++)
+			for (size_t f = 0; f < mmp.elems[e].size(); f++)
 			{
-				mmp.faces[f].pData = Downsample(upmmp.faces[f].pData, upmmp.w, upmmp.h);
+				mmp.elems[e][f].pData = Downsample(upmmp.elems[e][f].pData, upmmp.w, upmmp.h);
 			}
 			
-			/*string fileOut = "./mipmap.";
-			fileOut += to_string(upmmp.w);
-			fileOut += "x";
-			fileOut += to_string(upmmp.h);
-			fileOut += ".ppm";
-
-			WriteFaceToPPM(upmmp, 0, fileOut.c_str());*/
-
-	
 		}
 
-		
+	
+		/*string fileOut = "./mipmap.";
+		fileOut += to_string(upmmp.w);
+		fileOut += "x";
+		fileOut += to_string(upmmp.h);
+		fileOut += ".ppm";
+
+		WriteFaceToPPM(upmmp, 0, 0, fileOut.c_str());*/
 	}
 }
 
@@ -290,16 +297,18 @@ void* Container::Downsample(void* pData, int w, int h)
 }
 
 
-void Container::WriteFaceToPPM(MipmapLevel& mmp, int faceIndex, const char* filePath)
+void Container::WriteFaceToPPM(MipmapLevel& mmp, int elemIndex, int faceIndex, const char* filePath)
 {
 	ofstream ppm(filePath);	
 
 	size_t w = mmp.w;
 	size_t h = mmp.h;
 
-	assert((size_t)faceIndex < mmp.faces.size());
+	assert((size_t)elemIndex < mmp.elems.size());
 
-	uint8_t* pixels = (uint8_t*)mmp.faces[faceIndex].pData;
+	assert((size_t)faceIndex < mmp.elems[elemIndex].size());
+
+	uint8_t* pixels = (uint8_t*)mmp.elems[elemIndex][faceIndex].pData;
 
 	ppm << "P3" << endl;
 	ppm << (int)w << " " << (int)h << endl;
@@ -326,8 +335,53 @@ void Container::WriteFaceToPPM(MipmapLevel& mmp, int faceIndex, const char* file
 }
 
 bool Container::Write(const char* filePath) const
-{
-	return false;
+{	
+	cout << "Writing ktx container to " << filePath << endl;
+
+	ofstream file(filePath, ofstream::out | ofstream::trunc | ofstream::binary);
+	
+	if (!file.is_open())
+	{
+		cout << "Couldn't open '" << filePath << "' for writing" << endl;
+		file.close();
+		return false;
+	}
+
+	file.write((const char*)&m_header, sizeof(Header));
+
+	assert(m_header.numberOfMipmapLevels != 0);
+
+	//dummy 4byte value for padding
+	uint32_t dummy = 0;
+
+	for (size_t m = 0; m < m_mipmaps.size(); m++)
+	{
+		const MipmapLevel& mmp = m_mipmaps[m];
+	
+		uint32_t imgSize = (mmp.w * mmp.h) * m_comp;
+
+		file.write((const char*)&imgSize, sizeof(uint32_t));
+
+		for (size_t e = 0; e < mmp.elems.size(); e++)
+		{
+			for (size_t f = 0; f < mmp.elems[e].size(); f++)
+			{
+				const Face& face = mmp.elems[e][f];
+	
+				file.write((const char*)face.pData, imgSize);
+			}
+		}
+
+		int mipmapPadding = 3 - ((imgSize + 3) % 4);
+
+		file.write((const char*)&dummy, mipmapPadding);
+	}
+
+
+
+	file.close();
+
+	return true;
 }
 
 bool Container::Read(const char* filePath) const
