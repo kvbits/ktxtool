@@ -31,6 +31,7 @@
 #include "ktx/Container.h"
 #include "PixelData.h"
 
+#include "ktx/Compression/Compression.h"
 
 
 
