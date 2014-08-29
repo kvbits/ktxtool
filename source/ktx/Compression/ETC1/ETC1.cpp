@@ -165,7 +165,6 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 
 				}
         	}
-
 		}
 
 		EncodeBlocks(void* _in, void* _out, int _bw, int _bh, int _w, int _h, int _c, etc1_pack_params* _params)

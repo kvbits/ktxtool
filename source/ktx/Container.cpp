@@ -361,7 +361,6 @@ void Container::WriteFaceToPPM(MipmapLevel& mmp, int elemIndex, int faceIndex, c
 
 bool Container::Write(const char* filePath) const
 {	
-	cout << "Writing ktx container to " << filePath << endl;
 
 	ofstream file(filePath, ofstream::out | ofstream::trunc | ofstream::binary);
 	
@@ -445,6 +444,9 @@ bool Container::Write(const char* filePath) const
 		assert(m_pCompression != NULL);
 		delete pBuffer;
 	}
+
+	
+	cout << "Writing ktx container to " << filePath << endl;
 
 	return true;
 }
