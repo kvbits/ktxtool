@@ -9,9 +9,15 @@ Building
 -------------
 If you want to use imagemagick set the cmake option WITH-IMAGEMAGICK to true like this:
 
-cmake -DWITH-IMAGEMAGICK=true
+cmake ./ -DWITH-IMAGEMAGICK=true
 
 Be aware that this will disable all other "WITH" options as imagemagick already implement those formats and they're not needed.
+
+To enable multithreading set WITH-TBB to true like this:
+
+cmake ./ -DWITH-TBB=true
+
+With this the compression is reduced by the number of your CPU cores. Is recommended to have this enabled but it's not required.
 
 Current State
 -------------

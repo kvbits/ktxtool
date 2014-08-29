@@ -23,7 +23,11 @@ cmake_minimum_required(VERSION 2.6)
 project(ktxtool)
 
 
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/)
+
+
 option(WITH-PPM "Build with non-lib dependant .ppm support" true)
+option(WITH-TBB "Build with multithread support (for compression) using Intel's libTBB" false) 
 option(WITH-TIFF "Build with libtiff for standalone .tiff support" false)
 option(WITH-IMAGEMAGICK "Support for any* input formats" false)
 
@@ -38,6 +42,26 @@ set(SOURCES
 )
 
 set(LIBRARIES)
+
+
+
+
+
+
+
+#multithread support
+if(WITH-TBB)
+
+	add_definitions(-DKTXTOOL_TBB)
+
+	find_package(TBB REQUIRED)
+	set(INCLUDES ${INCLUDES} ${TBB_INCLUDE_DIRS})
+	set(LIBRARIES ${LIBRARIES} ${TBB_LIBRARIES})
+
+
+endif(WITH-TBB)
+
+
 
 
 
@@ -82,6 +106,7 @@ endif(WITH-IMAGEMAGICK)
 
 
 set(CMAKE_CXX_FLAGS " -std=c++0x ${CMAKE_CXX_FLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -DNDEBUG")
 set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -Wall -ggdb -D_DEBUG")
 
 include_directories(source/ ${INCLUDES})

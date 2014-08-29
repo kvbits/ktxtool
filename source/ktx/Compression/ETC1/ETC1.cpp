@@ -26,6 +26,15 @@
 #include <assert.h>
 #include <cstring>
 
+#ifdef KTXTOOL_TBB
+
+#include <tbb/blocked_range2d.h>
+#include <tbb/parallel_for.h>
+#include <tbb/task_scheduler_init.h>
+
+using namespace tbb;
+
+#endif
 
 
 
@@ -54,6 +63,10 @@ uint32_t ETC1::GetInternalFormat(Format format, ColorDepth depth)
 {
 	return KTXTOOL_GL_ETC1_RGB8_OES;
 }
+
+
+#define At(w, h, x, y) ((w * h) - (((y) * w) + (w - (x))))
+
 
 uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorDepth depth)
 {
@@ -84,28 +97,114 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 	}
 
 
-	m_quality = QUALITY_DRAFT;
+	/*m_quality = QUALITY_DRAFT;
 
-	params.m_dithering = true;
-
-	int offset = 0;
-
-	uint32_t block[16];
+	params.m_dithering = true;*/
 
 
 	int c = format == FORMAT_RGBA ? 4 : 3;
 
-	auto At = [](int w, int h, int x, int y) -> int
+	int bw = w / 4;
+	int bh = h / 4;
+
+
+#ifdef KTXTOOL_TBB
+	
+	
+	class EncodeBlocks
 	{
-		return ((w * h) - ((y * w) + (w - x)));
+		uint8_t* in;
+		uint8_t* out;
+		int c;
+		int w;
+		int h;
+		int bw;
+		int bh;
+		etc1_pack_params* params;
+
+	public:	
+
+
+		void operator()(const blocked_range2d<int>& r) const
+		{
+			
+
+
+			for (int by = r.rows().begin(); by != r.rows().end(); by++)
+			{
+				for (int bx = r.cols().begin(); bx != r.cols().end(); bx++) 
+				{
+					int x = bx * 4;
+					int y = by * 4;
+					
+									
+					int offset = At(bw, bh, bx, (bh-1) - by) * 8;
+
+
+					uint32_t block[16];
+
+
+
+					for (int ix = 0; ix < 4; ix++)
+					{
+						for (int iy = 0; iy < 4; iy++)
+						{
+							int i1 = At(4, 4, ix, 3 - iy);
+							int i2 = At(w, h, x + ix, y + iy);
+
+							uint8_t* p1 = (uint8_t*)&block[i1];
+							uint8_t* p2 = &((uint8_t*)in)[i2 * c];
+
+							memcpy(p1, p2, c);
+
+							p1[3] = 255;
+						}
+					}
+
+					pack_etc1_block(((char*)out) + offset, block, *params);
+
+				}
+        	}
+
+		}
+
+		EncodeBlocks(void* _in, void* _out, int _bw, int _bh, int _w, int _h, int _c, etc1_pack_params* _params)
+		{
+			in = (uint8_t*)_in;
+			out = (uint8_t*)_out;
+			c = _c;
+			w = _w;
+			h = _h;
+			bw = _bw;
+			bh = _bh;
+			params = _params;
+		}
+
 	};
 
 
+	parallel_for(blocked_range2d<int>(0, bw, 1, 0, bh, 1), EncodeBlocks(in, out, bw, bh, w, h, c, &params));
 
-	for (int y = 0; y < h; y += 4)
+
+#else
+
+	uint32_t block[16];
+
+
+	int size = (int)GetSize(w, h);
+
+
+	for (int by = 0; by < bh; by++)
 	{
-		for (int x = 0; x < w; x += 4)
+		for (int bx = 0; bx < bw; bx++)
 		{
+			int x = bx * 4;
+			int y = by * 4;
+			
+			
+			int offset = At(bw, bh, bx, (bh-1) - by) * 8;
+
+
 			for (int ix = 0; ix < 4; ix++)
 			{
 				for (int iy = 0; iy < 4; iy++)
@@ -114,7 +213,7 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 					int i2 = At(w, h, x + ix, y + iy);
 
 					uint8_t* p1 = (uint8_t*)&block[i1];
-					uint8_t* p2 = &((uint8_t*)in)[i2 * 4];
+					uint8_t* p2 = &((uint8_t*)in)[i2 * c];
 
 					memcpy(p1, p2, c);
 
@@ -122,15 +221,17 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 				}
 			}
 
+
 			pack_etc1_block(((char*)out) + offset, block, params);
 
-			offset += 8;
 		}
 	}
 
-	assert((uint32_t)offset == GetSize(w, h));
+#endif
 
-	return offset;
+	//assert((uint32_t)offset == GetSize(w, h));
+
+	return GetSize(w, h);
 }
 
 uint32_t ETC1::GetSize(int w, int h)
