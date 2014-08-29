@@ -27,6 +27,8 @@
 #include <math.h>
 #include <fstream>
 #include <string>
+#include "Compression/Compression.h"
+
 
 
 
@@ -143,6 +145,11 @@ void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 		m_header.glType = 0;
 		m_header.glTypeSize = 1;
 		m_header.glFormat = 0;
+
+		m_header.glBaseInternalFormat = m_pCompression->GetBaseInternalFormat(format, depth);
+		m_header.glInternalFormat = m_pCompression->GetInternalFormat(format, depth);
+
+		cout << "Compressing with " << m_pCompression->GetName() << endl;
 	}
 }
 
@@ -369,8 +376,23 @@ bool Container::Write(const char* filePath) const
 
 	assert(m_header.numberOfMipmapLevels != 0);
 
+
+
 	//dummy 4byte value for padding
 	uint32_t dummy = 0;
+
+
+	//buffer to hold down compressed data
+	char* pBuffer = NULL;
+	
+	//only allocate it if there's a compression defined
+	if (m_pCompression)
+	{
+		//allocating just the largest mipmap would be enough for the smallest one
+		pBuffer = (char*)malloc(m_pCompression->GetSize((int)m_header.pixelWidth, (int)m_header.pixelHeight));
+	}
+
+
 
 	for (size_t m = 0; m < m_mipmaps.size(); m++)
 	{
@@ -378,15 +400,36 @@ bool Container::Write(const char* filePath) const
 	
 		uint32_t imgSize = (mmp.w * mmp.h) * m_comp;
 
+
+		//if compressed set the fixed size 
+		if (m_pCompression)
+		{
+			imgSize = m_pCompression->GetSize(mmp.w, mmp.h);
+		}
+
+
 		file.write((const char*)&imgSize, sizeof(uint32_t));
 
 		for (size_t e = 0; e < mmp.elems.size(); e++)
 		{
 			for (size_t f = 0; f < mmp.elems[e].size(); f++)
 			{
+
 				const Face& face = mmp.elems[e][f];
-	
-				file.write((const char*)face.pData, imgSize);
+
+				const char* pData = (char*)face.pData;
+				size_t size = imgSize;
+				
+				//if ha compression then write the compressed data instead
+				if (m_pCompression)
+				{
+					pData = pBuffer;
+					size = m_pCompression->Compress(face.pData, pBuffer, mmp.w, mmp.h, m_format, m_depth);
+
+					assert(imgSize == size);
+				}
+
+				file.write(pData, size);
 			}
 		}
 
@@ -395,9 +438,13 @@ bool Container::Write(const char* filePath) const
 		file.write((const char*)&dummy, mipmapPadding);
 	}
 
-
-
 	file.close();
+
+	if (pBuffer)
+	{
+		assert(m_pCompression != NULL);
+		delete pBuffer;
+	}
 
 	return true;
 }

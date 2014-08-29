@@ -62,13 +62,13 @@ public:
 
 
 	/** Returns the GL base internal format */
-	virtual uint32_t GetBaseInternalFormat() = 0;
+	virtual uint32_t GetBaseInternalFormat(Format format, ColorDepth depth) = 0;
 	
 
 
 	
 	/** Returns the GL compressed internal format. */
-	virtual uint32_t GetInternalFormat() = 0;
+	virtual uint32_t GetInternalFormat(Format format, ColorDepth depth) = 0;
 
 
 
@@ -77,7 +77,7 @@ public:
 	 *
 	 *  Returns zero if failed, otherwise returns the output 
 	 *  data size in bytes */
-	virtual size_t Compress(void* in, void* out, int w, int h, Format format, ColorDepth depth) = 0;
+	virtual uint32_t Compress(void* in, void* out, int w, int h, Format format, ColorDepth depth) = 0;
 
 
 
@@ -94,6 +94,18 @@ public:
 	/** Gets the quality stored internally */
 	inline Quality GetQuality() const { return m_quality; }
 
+
+
+
+	/** Returns the expected compressed size by the dimmension,
+	 *  If the size is not fixed then returns zero. */
+	virtual uint32_t GetSize(int w, int h) = 0;
+
+
+
+
+	/** The compression name as a string */
+	virtual const char* GetName() const = 0;
 
 
 

@@ -33,6 +33,7 @@ set(INCLUDES source/)
 set(SOURCES 
 	source/ktxtool.cpp
 	source/ktx/Container.cpp
+	source/ktx/Compression/ETC1/ETC1.cpp
 	source/ktx/Compression/ETC1/rg_etc1.cpp
 )
 

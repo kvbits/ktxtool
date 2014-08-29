@@ -18,40 +18,43 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA. 
  */
 
-#ifndef __KTXTOOL_TYPES_INCLUDED
-#define __KTXTOOL_TYPES_INCLUDED
+
+#ifndef __KTXTOOL_COMPRESSION_ETC1_INCLUDED
+#define __KTXTOOL_COMPRESSION_ETC1_INCLUDED
 
 
 
 
+#include <ktx/Compression/Compression.h>
 
 
-#define KTXTOOL_GL_RGB 6407
-#define KTXTOOL_GL_RGBA 6408
 
-#define KTXTOOL_GL_RGB8 32849
-#define KTXTOOL_GL_RGBA8 32856
-
-#define KTXTOOL_GL_UNSIGNED_BYTE 5121
-#define KTXTOOL_GL_UNSIGNED_SHORT 5123
-#define KTXTOOL_GL_UNSIGNED_INT 5125
-
-
-#define KTXTOOL_GL_ETC1_RGB8_OES 36196
-
-enum Format
+class ETC1 : public Compression
 {
-	FORMAT_RGB,
-	FORMAT_RGBA
+public:
+
+	
+	ETC1();
+	virtual ~ETC1();
+
+
+	
+	uint32_t GetBaseInternalFormat(Format format, ColorDepth depth);
+
+	uint32_t GetInternalFormat(Format format, ColorDepth depth);
+
+	uint32_t GetSize(int w, int h);
+
+	uint32_t Compress(void* in, void* out, int w, int h, Format format, ColorDepth depth);
+
+
+	const char* GetName() const { return "ETC1 - Ericsson Texture Compression"; }
+
 };
 
-enum ColorDepth
-{
-	COLOR_DEPTH_8BIT,
-	COLOR_DEPTH_16BIT,
-	COLOR_DEPTH_24BIT,
-	COLOR_DEPTH_32bit
-};
+
+
+
 
 
 

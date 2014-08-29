@@ -32,6 +32,9 @@
 #include "PixelData.h"
 
 #include "ktx/Compression/Compression.h"
+#include "ktx/Compression/ETC1/ETC1.h"
+
+
 
 
 
@@ -387,11 +390,20 @@ int main (int argc, char* argv[])
 		return 11;
 	}
 
+	Compression* comp = NULL;
+
+	if (GetOption('c')->IsDefined())
+	{
+		//Because ETC1 is the only implemented compression will is pretty much hardcoded
+		comp = new ETC1();
+		comp->SetQuality(Compression::QUALITY_HIGH);
+	}
+
 	//ktx container
 	Container ktx;
 
 	ktx.Init(pPixelData->GetWidth(), pPixelData->GetHeight(), 1, 1);
-	ktx.SetFormat(pPixelData->GetFormat(), COLOR_DEPTH_8BIT, NULL);
+	ktx.SetFormat(pPixelData->GetFormat(), COLOR_DEPTH_8BIT, comp);
 	ktx.SetData(0, 0, pPixelData, true);
 
 	//we don't need the pixel data anymore
