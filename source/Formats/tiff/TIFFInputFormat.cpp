@@ -59,11 +59,11 @@ bool TIFFInputFormat::CheckExtension(const char* ext) const
 
 PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 {
-	PixelData* pData = NULL;
+	PixelData* pData = nullptr;
 
 	TIFF* tif = TIFFOpen(filePath, "r");
 
-	if (tif != NULL)
+	if (tif != nullptr)
 	{
 
 		
@@ -80,7 +80,7 @@ PixelData* TIFFInputFormat::CreatePixelData(const char* filePath)
 
 		raster = (uint32*) _TIFFmalloc(npixels * sizeof (uint32));
 
-		if (raster != NULL) 
+		if (raster != nullptr) 
 		{
 			if (TIFFReadRGBAImageOriented(tif, w, h, raster, ORIENTATION_TOPLEFT, 0))
 			{

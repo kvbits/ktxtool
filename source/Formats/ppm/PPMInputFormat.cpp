@@ -59,7 +59,7 @@ bool PPMInputFormat::CheckExtension(const char* ext) const
 
 PixelData* PPMInputFormat::CreatePixelData(const char* filePath)
 {
-	PixelData* pData = NULL;
+	PixelData* pData = nullptr;
 
 	int w = -1;
 	int h = -1;

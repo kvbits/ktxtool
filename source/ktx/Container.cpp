@@ -48,7 +48,7 @@ using namespace std;
 
 Container::Container()
 {
-	m_pCompression = NULL;
+	m_pCompression = nullptr;
 }
 
 void Container::Init(int w, int h, int elementCount, int faceCount)
@@ -89,7 +89,7 @@ void Container::Init(int w, int h, int elementCount, int faceCount)
 
 		for (size_t f = 0; f < mmp.elems[e].size(); f++)
 		{
-			mmp.elems[e][f].pData = NULL;
+			mmp.elems[e][f].pData = nullptr;
 		}
 
 	}
@@ -213,7 +213,7 @@ void Container::GenerateMipmaps()
 
 	Face& refFace = m_mipmaps[0].elems[0][0];
 		
-	assert(refFace.pData != NULL);
+	assert(refFace.pData != nullptr);
 	
 
 
@@ -382,7 +382,7 @@ bool Container::Write(const char* filePath) const
 
 
 	//buffer to hold down compressed data
-	char* pBuffer = NULL;
+	char* pBuffer = nullptr;
 	
 	//only allocate it if there's a compression defined
 	if (m_pCompression)
@@ -441,8 +441,8 @@ bool Container::Write(const char* filePath) const
 
 	if (pBuffer)
 	{
-		assert(m_pCompression != NULL);
-		delete pBuffer;
+		assert(m_pCompression != nullptr);
+		free(pBuffer);
 	}
 
 	
