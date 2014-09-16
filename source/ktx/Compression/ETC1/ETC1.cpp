@@ -138,7 +138,7 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 					int y = by * 4;
 					
 									
-					int offset = At(bw, bh, bx, (bh-1) - by) * 8;
+					int offset = At(bw, bh, bx, by) * 8;
 
 
 					uint32_t block[16];
@@ -201,7 +201,7 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 			int y = by * 4;
 			
 			
-			int offset = At(bw, bh, bx, (bh-1) - by) * 8;
+			int offset = At(bw, bh, bx, by) * 8;
 
 
 			for (int ix = 0; ix < 4; ix++)
