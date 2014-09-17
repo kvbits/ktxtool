@@ -149,7 +149,7 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 					{
 						for (int iy = 0; iy < 4; iy++)
 						{
-							int i1 = At(4, 4, ix, 3 - iy);
+							int i1 = At(4, 4, ix, iy);
 							int i2 = At(w, h, x + ix, y + iy);
 
 							uint8_t* p1 = (uint8_t*)&block[i1];
@@ -208,7 +208,7 @@ uint32_t ETC1::Compress(void* in, void* out, int w, int h, Format format, ColorD
 			{
 				for (int iy = 0; iy < 4; iy++)
 				{
-					int i1 = At(4, 4, ix, 3 - iy);
+					int i1 = At(4, 4, ix, iy);
 					int i2 = At(w, h, x + ix, y + iy);
 
 					uint8_t* p1 = (uint8_t*)&block[i1];
