@@ -148,12 +148,10 @@ void Container::SetFormat(Format format, ColorDepth depth, Compression* pComp)
 
 		m_header.glBaseInternalFormat = m_pCompression->GetBaseInternalFormat(format, depth);
 		m_header.glInternalFormat = m_pCompression->GetInternalFormat(format, depth);
-
-		cout << "Compressing with " << m_pCompression->GetName() << endl;
 	}
 }
 
-void Container::SetData(int elementIndex, int faceIndex, PixelData* pData, bool generateMipmaps)
+void Container::SetData(int elementIndex, int faceIndex, PixelData* pData)
 {
 	assert((size_t)elementIndex < m_mipmaps[0].elems.size()); 
 
@@ -193,8 +191,6 @@ void Container::GenerateMipmaps()
 
 	if (!IsSqrPowerOf2())
 	{
-		DumpMipmap(m_mipmaps[0]);
-
 		cout << "KTX Container: Unable to generate mipmaps (non square power of 2)" << endl;
 		return;
 	}
@@ -207,9 +203,9 @@ void Container::GenerateMipmaps()
 	int refW = m_mipmaps[0].w;
 	int refH = m_mipmaps[0].h;
 
-	//make sure that the reference mipmap has valid face (assumes not cube map TODO)
+	//make sure that the reference mipmap has valid face
 	assert(m_mipmaps[0].elems.size() == 1);
-	assert(m_mipmaps[0].elems[0].size() == 1);
+	assert(m_mipmaps[0].elems[0].size() >= 1);
 
 	Face& refFace = m_mipmaps[0].elems[0][0];
 		
@@ -391,6 +387,11 @@ bool Container::Write(const char* filePath) const
 		pBuffer = (char*)malloc(m_pCompression->GetSize((int)m_header.pixelWidth, (int)m_header.pixelHeight));
 	}
 
+
+	if (m_pCompression)
+	{
+		cout << "Compressing with " << m_pCompression->GetName() << endl;
+	}
 
 
 	for (size_t m = 0; m < m_mipmaps.size(); m++)

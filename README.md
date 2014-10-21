@@ -19,6 +19,12 @@ cmake ./ -DWITH-TBB=true
 
 With this the compression is reduced by the number of your CPU cores. Is recommended to have this enabled but it's not required.
 
+Usage
+----------------
+
+To generate a cube map texture type this command
+ktxtool face1.jpg,face2.jpg,face3.jpg,face4.jpg,face5.jpg,face6.jpg
+
 Current State
 -------------
 Only RGB8 and RGBA8 is supported either raw or compressed, as for compression goes only ETC1 is implemented. I made this tool for mobile development so even if this tool is far from complete it could be used for production already if your usage match mine.

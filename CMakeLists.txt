@@ -23,6 +23,21 @@ cmake_minimum_required(VERSION 2.6)
 project(ktxtool)
 
 
+enable_testing()
+
+
+set(TEST_IMG ${CMAKE_SOURCE_DIR}/tests/data/brick_rgb.tiff)
+
+#for testing purposes just an small image to reduce compression times
+set(TEST_IMG_SMALL ${CMAKE_SOURCE_DIR}/tests/data/grid_rgb.gif)
+
+
+add_test(standard                        ktxtool ${TEST_IMG} out.ktx)
+add_test(standard-with-compression       ktxtool -c ${TEST_IMG_SMALL} out.ktx)
+add_test(multiple-faces                  ktxtool ${TEST_IMG},${TEST_IMG},${TEST_IMG} out.ktx)
+add_test(multiple-faces-with-compression ktxtool -c ${TEST_IMG_SMALL},${TEST_IMG_SMALL},${TEST_IMG_SMALL} out.ktx)
+
+
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/cmake/)
 
 

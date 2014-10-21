@@ -21,6 +21,7 @@
 
 #include "ktxtool.h"
 #include <iostream>
+#include <sstream>
 #include <map>
 #include <list>
 #include <string>
@@ -144,7 +145,7 @@ static void DumpSupportedFormats()
 
 static void DumpHelp()
 {
-	cout << "ktxtool v0.1.0" << endl << endl;
+	cout << "ktxtool v0.2.0" << endl << endl;
 	cout << "  Usage: ktxtool -[OPTIONS]... FILEIN [FILEOUT]" << endl << endl;
 	
 	DumpOptions();
@@ -174,11 +175,12 @@ static bool FileExists(const string& filePath)
 int main (int argc, char* argv[])
 {
 	//define the options
-	AddOption('c', OPTION_EXPECTS_VALUE, "Use a compression format [ETC1, ETC2, PTVPR, ] (Currently not supported)");
+	AddOption('c', 0, "Compress with ETC1");
 	AddOption('v', 0, "Verbose output");
-	AddOption('f', OPTION_REQUIRED | OPTION_EXPECTS_VALUE, "Input file");
+	AddOption('f', OPTION_REQUIRED | OPTION_EXPECTS_VALUE, "Input file. For multiple faces use commas (no spaces)");
 	AddOption('o', OPTION_EXPECTS_VALUE, "Output file");
 	AddOption('d', 0, "Dumps mipmaps as individual ppm files");
+	AddOption('y', 0, "Flips the Y Axis or upside down");
 
 
 	if (argc < 2)
@@ -323,29 +325,65 @@ int main (int argc, char* argv[])
 		it++;
 	}
 
+
 	
-	//now that we have all the required options let's validate them
-	
-	//Make sure the input file exists
-	if (!FileExists(opt1->value))
+	//define some variables
+	Container ktx; //this holds float/32bit color data only
+
+
+	Compression* pComp = nullptr;
+
+	if (GetOption('c')->IsDefined())
 	{
-		cerr << "Input file doesn't exist" << endl;
-		return 7;
+		pComp = new ETC1();
+		pComp->SetQuality(Compression::QUALITY_HIGH);
 	}
 
 
-	string strExt = opt1->value.substr(opt1->value.find_last_of(".") + 1);
+	//The faces
+	vector<string> faces;
+	
+	std::istringstream ss(opt1->value);
+	std::string token;
 
-	if (strExt.size() == 0)
+	//extract the filenames as faces
+	while (std::getline(ss, token, ','))
 	{
-		cerr << "Input file has no extension, therefore unabled to determine its format" << endl;
-		return 10;
+		faces.push_back(token);
 	}
 
-	InputFormat* pFormat = NULL;
 
-	//Look for compatible formats and create the pixel data
-	{	
+	//all faces should match this format, width and height (taken from index 0)
+	Format refFormat;
+	float  refWidth;
+	float  refHeight;
+
+	//process all the faces	
+	for (size_t i = 0; i < faces.size(); i++)
+	{
+		const string& fileName = faces[i];
+
+		cout << "Processing face at index " << i << ": " << fileName << endl;
+
+		//check if the file exists
+		if (!FileExists(fileName))
+		{
+			cerr << "Input file  doesn't exist" << endl;
+			return 7;
+		}
+
+		//get the extension
+		string strExt = opt1->value.substr(opt1->value.find_last_of(".") + 1);
+
+		if (strExt.size() == 0)
+		{
+			cerr << "Input file has no extension, therefore unabled to determine its format" << endl;
+			return 10;
+		}
+
+		//Lookup for a compatible format
+		InputFormat* pFormat = nullptr;
+
 		FormatList::iterator it = formats.begin();
 
 		while (it != formats.end())
@@ -359,59 +397,71 @@ int main (int argc, char* argv[])
 
 			it++;
 		}
+		
+		if (pFormat == nullptr)
+		{
+			cerr << "Input format is not supported" << endl;
+			return 8;
+		}
+
+		assert(pFormat != nullptr);
+
+		//Create the pixel data and add the face into the ktx container
+		PixelData* pPixelData = pFormat->CreatePixelData(fileName.c_str());
+
+		if (pPixelData == nullptr)
+		{
+			cerr << "Couldn't create pixel data from input file" << endl;
+			return 11;
+		}
+
+		const float  w = pPixelData->GetWidth();
+		const float  h = pPixelData->GetHeight();
+		const Format f = pPixelData->GetFormat(); 
+		
+		//if first face then initialize the container
+		if (i == 0)
+		{
+			refFormat = f;
+			refWidth = w;
+			refHeight = h;
+
+			ktx.Init(w, h, 1, faces.size());
+			ktx.SetFormat(f, COLOR_DEPTH_8BIT, pComp);
+		}
+
+		if (!(refFormat == f && refWidth == w && refHeight == h))
+		{
+			cerr << "Format/Dimmension mismatch, all faces should match the face at index 0" << endl;
+			return 15;
+		}
+
+		ktx.SetData(0, i, pPixelData);
+
+		//we don't need the pixel data anymore
+		delete pPixelData;
 	}
-	
-	if (pFormat == NULL)
-	{
-		cerr << "Input format is not supported" << endl;
-		return 8;
-	}
-
-	assert(pFormat != NULL);
 
 
+	//setup the output file and write the container
 	string outputFile = opt2->value;
 
 	if (outputFile.size() == 0)
 	{
-		size_t dotAt = opt1->value.find_last_of('.');
+		assert(faces.size() >= 1);
 
-		outputFile = opt1->value.substr(0, dotAt);
+		size_t dotAt = faces[0].find_last_of('.');
+
+		outputFile = faces[0].substr(0, dotAt);
 		outputFile += ".ktx";
 	}
-
-
-	//Get the pixel data and proceed with the convertion and compression
-	PixelData* pPixelData = pFormat->CreatePixelData(opt1->value.c_str());
-
-	if (pPixelData == NULL)
-	{
-		cerr << "Couldn't create pixel data from input file" << endl;
-		return 11;
-	}
-
-	Compression* comp = NULL;
-
-	if (GetOption('c')->IsDefined())
-	{
-		//Because ETC1 is the only implemented compression will is pretty much hardcoded
-		comp = new ETC1();
-		comp->SetQuality(Compression::QUALITY_HIGH);
-	}
-
-	//ktx container
-	Container ktx;
-
-	ktx.Init(pPixelData->GetWidth(), pPixelData->GetHeight(), 1, 1);
-	ktx.SetFormat(pPixelData->GetFormat(), COLOR_DEPTH_8BIT, comp);
-	ktx.SetData(0, 0, pPixelData, true);
-
-	//we don't need the pixel data anymore
-	delete pPixelData;
-
+	
 	ktx.GenerateMipmaps();
 
 	ktx.Write(outputFile.c_str());
+
+
+
 
 	return 0;
 }

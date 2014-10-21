@@ -152,7 +152,7 @@ public:
 	/** This allocates and sets the pixel data in its final format. 
 	 *  The format and compression should be defined before calling 
 	 *  this method. */
-	void SetData(int elementIndex, int faceIndex, PixelData* pData, bool generateMipmaps = false);
+	void SetData(int elementIndex, int faceIndex, PixelData* pData);
 
 
 
